@@ -45,9 +45,13 @@ async def health_check():
     }
 
 
-# TODO: ルーターを追加
-# from app.routers import auth, users, daily_reports
-# app.include_router(auth.router, prefix="/api/auth", tags=["認証"])
+# ルーター追加
+from app.routers import auth
+
+app.include_router(auth.router)
+
+# TODO: 他のルーターを追加
+# from app.routers import users, daily_reports
 # app.include_router(users.router, prefix="/api/users", tags=["ユーザー"])
 # app.include_router(daily_reports.router, prefix="/api/daily-reports", tags=["日報"])
 
