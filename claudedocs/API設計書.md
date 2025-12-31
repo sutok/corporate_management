@@ -14,7 +14,9 @@
 11. [支店マスタAPI](#支店マスタapi)
 12. [部署マスタAPI](#部署マスタapi)
 13. [ユーザー所属管理API](#ユーザー所属管理api)
-14. [エラーコード一覧](#エラーコード一覧)
+14. [サービスマスタAPI](#サービスマスタapi)
+15. [企業サービス契約API](#企業サービス契約api)
+16. [エラーコード一覧](#エラーコード一覧)
 
 ---
 
@@ -1847,6 +1849,398 @@ Authorization: Bearer {access_token}
 
 ---
 
+## サービスマスタAPI
+
+### サービス一覧取得
+
+提供可能なオプションサービスの一覧を取得
+
+- **Endpoint**: `GET /api/services`
+- **認証**: 必要
+- **権限**: システム管理者
+
+#### クエリパラメータ
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| search | string | - | サービス名での部分一致検索 |
+| is_active | boolean | - | 提供状態フィルタ（true/false） |
+| page | integer | - | ページ番号（デフォルト: 1） |
+| per_page | integer | - | 1ページあたり件数（デフォルト: 20） |
+
+#### レスポンス (200 OK)
+```json
+{
+  "status": "success",
+  "data": {
+    "services": [
+      {
+        "id": 1,
+        "service_code": "DAILY_REPORT",
+        "service_name": "営業日報サービス",
+        "description": "日々の営業活動を記録・管理するサービス",
+        "base_price": 5000,
+        "is_active": true,
+        "created_at": "2025-12-31T10:00:00Z",
+        "updated_at": "2025-12-31T10:00:00Z"
+      }
+    ],
+    "pagination": {
+      "current_page": 1,
+      "per_page": 20,
+      "total_pages": 1,
+      "total_count": 1
+    }
+  }
+}
+```
+
+---
+
+### サービス詳細取得
+
+指定したサービスの詳細情報を取得
+
+- **Endpoint**: `GET /api/services/{service_id}`
+- **認証**: 必要
+- **権限**: システム管理者
+
+#### レスポンス (200 OK)
+```json
+{
+  "status": "success",
+  "data": {
+    "id": 1,
+    "service_code": "DAILY_REPORT",
+    "service_name": "営業日報サービス",
+    "description": "日々の営業活動を記録・管理するサービス",
+    "base_price": 5000,
+    "is_active": true,
+    "created_at": "2025-12-31T10:00:00Z",
+    "updated_at": "2025-12-31T10:00:00Z"
+  }
+}
+```
+
+---
+
+### サービス登録
+
+新規オプションサービスを登録
+
+- **Endpoint**: `POST /api/services`
+- **認証**: 必要
+- **権限**: システム管理者
+
+#### リクエスト
+```json
+{
+  "service_code": "DAILY_REPORT",
+  "service_name": "営業日報サービス",
+  "description": "日々の営業活動を記録・管理するサービス",
+  "base_price": 5000,
+  "is_active": true
+}
+```
+
+#### バリデーション
+- `service_code`: 必須、半角英数大文字アンダースコアのみ、最大50文字、ユニーク
+- `service_name`: 必須、最大100文字
+- `description`: 任意、最大500文字
+- `base_price`: 必須、0以上の数値
+- `is_active`: 任意、真偽値（デフォルト: true）
+
+#### レスポンス (201 Created)
+```json
+{
+  "status": "success",
+  "data": {
+    "id": 1,
+    "service_code": "DAILY_REPORT",
+    "service_name": "営業日報サービス",
+    "description": "日々の営業活動を記録・管理するサービス",
+    "base_price": 5000,
+    "is_active": true,
+    "created_at": "2025-12-31T10:00:00Z",
+    "updated_at": "2025-12-31T10:00:00Z"
+  }
+}
+```
+
+#### エラーレスポンス
+- **409 Conflict**: サービスコードが重複
+```json
+{
+  "status": "error",
+  "error": {
+    "code": "DUPLICATE_SERVICE_CODE",
+    "message": "このサービスコードは既に登録されています"
+  }
+}
+```
+
+---
+
+### サービス更新
+
+既存サービス情報を更新
+
+- **Endpoint**: `PUT /api/services/{service_id}`
+- **認証**: 必要
+- **権限**: システム管理者
+
+#### リクエスト
+```json
+{
+  "service_name": "営業日報サービス（更新版）",
+  "description": "日々の営業活動を記録・管理するサービス（更新）",
+  "base_price": 6000,
+  "is_active": true
+}
+```
+
+#### バリデーション
+- `service_code`: 変更不可（リクエストに含めない）
+- その他はサービス登録と同様
+
+#### レスポンス (200 OK)
+```json
+{
+  "status": "success",
+  "data": {
+    "id": 1,
+    "service_code": "DAILY_REPORT",
+    "service_name": "営業日報サービス（更新版）",
+    "description": "日々の営業活動を記録・管理するサービス（更新）",
+    "base_price": 6000,
+    "is_active": true,
+    "updated_at": "2025-12-31T11:00:00Z"
+  }
+}
+```
+
+---
+
+### サービス削除
+
+サービスを削除（論理削除推奨）
+
+- **Endpoint**: `DELETE /api/services/{service_id}`
+- **認証**: 必要
+- **権限**: システム管理者
+
+#### レスポンス (204 No Content)
+```
+（レスポンスボディなし）
+```
+
+#### エラーレスポンス
+- **409 Conflict**: 契約企業が存在する
+```json
+{
+  "status": "error",
+  "error": {
+    "code": "SERVICE_HAS_SUBSCRIPTIONS",
+    "message": "このサービスは契約企業が存在するため削除できません"
+  }
+}
+```
+
+---
+
+## 企業サービス契約API
+
+### 企業のサービス契約一覧取得
+
+指定企業のサービス契約状況を取得
+
+- **Endpoint**: `GET /api/companies/{company_id}/service-subscriptions`
+- **認証**: 必要
+- **権限**: システム管理者
+
+#### レスポンス (200 OK)
+```json
+{
+  "status": "success",
+  "data": {
+    "company_id": 1,
+    "company_name": "株式会社サンプル",
+    "subscriptions": [
+      {
+        "id": 1,
+        "service_id": 1,
+        "service_code": "DAILY_REPORT",
+        "service_name": "営業日報サービス",
+        "status": "active",
+        "start_date": "2025-01-01",
+        "end_date": null,
+        "monthly_price": 5000,
+        "created_at": "2025-12-31T10:00:00Z",
+        "updated_at": "2025-12-31T10:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### サービス契約追加
+
+企業に新規サービス契約を追加
+
+- **Endpoint**: `POST /api/companies/{company_id}/service-subscriptions`
+- **認証**: 必要
+- **権限**: システム管理者
+
+#### リクエスト
+```json
+{
+  "service_id": 1,
+  "status": "active",
+  "start_date": "2025-01-01",
+  "end_date": null,
+  "monthly_price": 5000
+}
+```
+
+#### バリデーション
+- `service_id`: 必須、存在するサービスID、未契約チェック
+- `status`: 必須、"active"/"suspended"/"cancelled"のいずれか
+- `start_date`: 必須、日付形式（YYYY-MM-DD）
+- `end_date`: 任意、日付形式、start_date以降の日付、nullの場合は無期限
+- `monthly_price`: 必須、0以上の数値
+
+#### レスポンス (201 Created)
+```json
+{
+  "status": "success",
+  "data": {
+    "id": 1,
+    "company_id": 1,
+    "service_id": 1,
+    "service_code": "DAILY_REPORT",
+    "service_name": "営業日報サービス",
+    "status": "active",
+    "start_date": "2025-01-01",
+    "end_date": null,
+    "monthly_price": 5000,
+    "created_at": "2025-12-31T10:00:00Z"
+  }
+}
+```
+
+#### エラーレスポンス
+- **409 Conflict**: 既に契約済み
+```json
+{
+  "status": "error",
+  "error": {
+    "code": "SERVICE_ALREADY_SUBSCRIBED",
+    "message": "このサービスは既に契約済みです"
+  }
+}
+```
+
+---
+
+### サービス契約更新
+
+企業のサービス契約情報を更新
+
+- **Endpoint**: `PUT /api/companies/{company_id}/service-subscriptions/{subscription_id}`
+- **認証**: 必要
+- **権限**: システム管理者
+
+#### リクエスト
+```json
+{
+  "status": "suspended",
+  "end_date": "2025-12-31",
+  "monthly_price": 6000
+}
+```
+
+#### バリデーション
+- `service_id`: 変更不可
+- その他はサービス契約追加と同様
+
+#### レスポンス (200 OK)
+```json
+{
+  "status": "success",
+  "data": {
+    "id": 1,
+    "company_id": 1,
+    "service_id": 1,
+    "service_code": "DAILY_REPORT",
+    "service_name": "営業日報サービス",
+    "status": "suspended",
+    "start_date": "2025-01-01",
+    "end_date": "2025-12-31",
+    "monthly_price": 6000,
+    "updated_at": "2025-12-31T11:00:00Z"
+  }
+}
+```
+
+---
+
+### サービス契約削除
+
+企業のサービス契約を削除
+
+- **Endpoint**: `DELETE /api/companies/{company_id}/service-subscriptions/{subscription_id}`
+- **認証**: 必要
+- **権限**: システム管理者
+
+#### レスポンス (204 No Content)
+```
+（レスポンスボディなし）
+```
+
+---
+
+### サービス有効性チェック
+
+企業が特定サービスを利用可能かチェック
+
+- **Endpoint**: `GET /api/companies/{company_id}/service-subscriptions/check/{service_code}`
+- **認証**: 必要
+- **権限**: 全ユーザー（所属企業のみ）
+
+#### レスポンス (200 OK)
+```json
+{
+  "status": "success",
+  "data": {
+    "service_code": "DAILY_REPORT",
+    "service_name": "営業日報サービス",
+    "is_available": true,
+    "subscription_status": "active",
+    "start_date": "2025-01-01",
+    "end_date": null
+  }
+}
+```
+
+#### 契約なし・無効の場合
+```json
+{
+  "status": "success",
+  "data": {
+    "service_code": "DAILY_REPORT",
+    "service_name": "営業日報サービス",
+    "is_available": false,
+    "subscription_status": null,
+    "start_date": null,
+    "end_date": null
+  }
+}
+```
+
+---
+
 ## エラーコード一覧
 
 | エラーコード | HTTPステータス | 説明 |
@@ -1864,6 +2258,10 @@ Authorization: Bearer {access_token}
 | DEPARTMENT_HAS_USERS | 409 | ユーザーが所属する部署は削除不可 |
 | LAST_BRANCH_ASSIGNMENT | 400 | 最低1つの支店に所属させる必要がある |
 | LAST_DEPARTMENT_ASSIGNMENT | 400 | 最低1つの部署に所属させる必要がある |
+| DUPLICATE_SERVICE_CODE | 409 | サービスコードが既に登録されている |
+| SERVICE_HAS_SUBSCRIPTIONS | 409 | 契約企業が存在するサービスは削除不可 |
+| SERVICE_ALREADY_SUBSCRIBED | 409 | 既に契約済みのサービス |
+| SERVICE_NOT_AVAILABLE | 403 | サービスが利用不可（未契約または無効） |
 | INTERNAL_SERVER_ERROR | 500 | サーバー内部エラー |
 
 ---
@@ -1891,6 +2289,11 @@ Authorization: Bearer {access_token}
 ### リモート種別 (remote)
 - `false` (0): 対面訪問
 - `true` (1): リモート訪問
+
+### サービス契約状態 (subscription status)
+- `active`: 有効（サービス利用可能）
+- `suspended`: 一時停止（サービス利用不可）
+- `cancelled`: 解約済（サービス利用不可）
 
 ---
 

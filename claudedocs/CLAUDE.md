@@ -39,6 +39,12 @@
 - **ユーザー所属管理**: ユーザーは複数の支店・部署に所属可能
 - **主所属設定**: 各ユーザーの主たる所属支店・部署を設定可能
 
+### 2.5 オプションサービス管理
+- **サービスマスタ管理**: 提供可能なオプションサービスの定義と管理
+- **企業サービス契約管理**: 企業ごとのサービス契約状況の管理
+- **サービス有効性制御**: 契約状況に基づく機能アクセス制御
+- **日報機能のオプション化**: 日報関連機能（DailyReports, VisitRecords, Problems, Plans, Comments）をオプションサービスとして提供
+
 ## 3. データ構造
 
 ### 3.1 エンティティ一覧
@@ -176,6 +182,31 @@
 | created_at | datetime | 作成日時 |
 | updated_at | datetime | 更新日時 |
 
+#### Services（サービスマスタ）
+| カラム名 | 型 | 説明 |
+|---------|-----|------|
+| id | int | サービスID (PK) |
+| service_code | string | サービスコード（例：DAILY_REPORT） |
+| service_name | string | サービス名 |
+| description | text | サービス説明 |
+| base_price | decimal | 基本料金 |
+| is_active | boolean | 提供中か (default:true) |
+| created_at | datetime | 作成日時 |
+| updated_at | datetime | 更新日時 |
+
+#### CompanyServiceSubscriptions（企業サービス契約）
+| カラム名 | 型 | 説明 |
+|---------|-----|------|
+| id | int | 契約ID (PK) |
+| company_id | int | 企業ID (FK) |
+| service_id | int | サービスID (FK) |
+| status | string | 契約状態（active/suspended/cancelled） |
+| start_date | date | 契約開始日 |
+| end_date | date | 契約終了日（null許可） |
+| monthly_price | decimal | 月額料金（企業別カスタム料金） |
+| created_at | datetime | 作成日時 |
+| updated_at | datetime | 更新日時 |
+
 ### 3.2 リレーションシップ
 
 ```mermaid
@@ -183,6 +214,8 @@ erDiagram
     Companies ||--o{ Branches : "has"
     Companies ||--o{ Users : "employs"
     Companies ||--o{ Customers : "has"
+    Companies ||--o{ CompanyServiceSubscriptions : "subscribes"
+    Services ||--o{ CompanyServiceSubscriptions : "subscribed_by"
     Branches ||--o{ Departments : "has"
     Branches ||--o{ UserBranchAssignments : "assigned_to"
     Departments ||--o{ UserDepartmentAssignments : "assigned_to"
@@ -317,6 +350,29 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
+
+    Services {
+        int id PK
+        string service_code
+        string service_name
+        text description
+        decimal base_price
+        boolean is_active
+        datetime created_at
+        datetime updated_at
+    }
+
+    CompanyServiceSubscriptions {
+        int id PK
+        int company_id FK
+        int service_id FK
+        string status "active/suspended/cancelled"
+        date start_date
+        date end_date
+        decimal monthly_price
+        datetime created_at
+        datetime updated_at
+    }
 ```
 
 #### 主要なリレーションシップ
@@ -342,6 +398,12 @@ erDiagram
 - **Users ← Customers**: 1ユーザーが複数の顧客を担当
 - **Customers ← VisitRecords**: 1顧客が複数の訪問記録を持つ
 
+**サービス管理関連**
+- **Services ← CompanyServiceSubscriptions**: 1サービスが複数の企業に契約される
+- **Companies ← CompanyServiceSubscriptions**: 1企業が複数のサービスを契約可能
+- **CompanyServiceSubscriptions.status**: 契約状態（active/suspended/cancelled）
+- **日報機能の制御**: service_code="DAILY_REPORT"の契約が有効な場合のみ日報機能へのアクセスを許可
+
 ## 4. 想定される活用例
 
 ### 4.1 営業活動分析
@@ -355,6 +417,12 @@ erDiagram
 - 課題の進捗管理
 - 計画の実行状況追跡
 - チーム全体の活動状況把握
+
+### 4.3 サービス管理
+- 企業ごとのオプションサービス契約管理
+- サービス契約状況に基づくアクセス制御
+- 柔軟なサービス追加・停止運用
+- 企業別カスタム料金設定
 
 ## 5. 将来的な拡張機能候補
 
