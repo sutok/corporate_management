@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(podman compose build:*)",
+      "Bash(curl:*)",
+      "Bash(podman compose:*)",
+      "Bash(git config:*)",
+      "Bash(git commit:*)",
+      "Bash(gh repo view:*)",
+      "Bash(git pull:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(git checkout:*)",
+      "Bash(git branch:*)",
+      "Bash(gh issue create:*)"
+    ]
+  }
+}
