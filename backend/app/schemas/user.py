@@ -22,6 +22,16 @@ class UserCreate(UserBase):
     password: str
 
 
+class UserUpdate(BaseModel):
+    """ユーザー更新"""
+
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[str] = None
+    position: Optional[str] = None
+    password: Optional[str] = None
+
+
 class UserResponse(UserBase):
     """ユーザーレスポンス"""
 
