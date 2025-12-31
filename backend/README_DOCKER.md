@@ -4,8 +4,15 @@
 
 このプロジェクトはDocker Composeを使用して以下のサービスを管理します:
 - **PostgreSQL**: データベース
-- **Backend (FastAPI)**: RESTful API サーバー
+- **Backend (FastAPI)**: RESTful API サーバー（**uv**使用で高速ビルド）
 - **pgAdmin**: データベース管理ツール
+
+### 技術的特徴
+
+- ⚡ **高速パッケージ管理**: Rustベースの[uv](https://github.com/astral-sh/uv)を使用し、従来のpipより10-100倍高速
+- 🔄 **ホットリロード**: コード変更時に自動的にサーバーが再起動
+- 🔗 **サービス連携**: 専用ネットワークで各サービスが効率的に通信
+- 📦 **データ永続化**: PostgreSQLデータとpgAdmin設定を永続化
 
 ## 前提条件
 
@@ -24,9 +31,19 @@
 ### 2. Backend (FastAPI)
 - **コンテナ名**: `attendance_backend`
 - **ポート**: `8000`
+- **パッケージマネージャー**: uv (Rust製、pip比10-100倍高速)
 - **API URL**: http://localhost:8000
 - **API ドキュメント**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
+
+**Dockerfileの最適化ポイント:**
+```dockerfile
+# uvを使用して高速インストール
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+RUN uv pip install --system -r requirements.txt
+```
+
+詳細は [UV_GUIDE.md](./UV_GUIDE.md) を参照してください。
 
 ### 3. pgAdmin
 - **コンテナ名**: `attendance_pgadmin`

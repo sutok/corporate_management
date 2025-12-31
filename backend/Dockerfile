@@ -5,24 +5,26 @@ WORKDIR /app
 
 # 環境変数設定
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PYTHONDONTWRITEBYTECODE=1
 
 # システムパッケージ更新とPostgreSQL依存関係インストール
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
     postgresql-client \
-    libpq-dev && \
+    libpq-dev \
+    curl && \
     rm -rf /var/lib/apt/lists/*
+
+# uvインストール
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 # 依存関係ファイルコピー
 COPY requirements.txt .
 
 # Python依存関係インストール
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+RUN uv pip install --system -r requirements.txt
 
 # アプリケーションコードコピー
 COPY . .
