@@ -17,7 +17,9 @@
       "Bash(gh pr merge:*)",
       "Bash(git checkout:*)",
       "Bash(git branch:*)",
-      "Bash(gh issue create:*)"
+      "Bash(gh issue create:*)",
+      "Bash(gh secret:*)",
+      "Bash(git stash:*)"
     ]
   }
 }
