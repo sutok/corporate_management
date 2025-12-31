@@ -44,3 +44,17 @@ htmlcov/
 
 # Docker
 *.pid
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Python virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Alembic
+alembic/versions/*.pyc
