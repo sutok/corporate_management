@@ -17,8 +17,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # uvインストール
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.cargo/bin:${PATH}"
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    mv /root/.local/bin/uv /usr/local/bin/uv && \
+    mv /root/.local/bin/uvx /usr/local/bin/uvx
 
 # 依存関係ファイルコピー
 COPY requirements.txt .
