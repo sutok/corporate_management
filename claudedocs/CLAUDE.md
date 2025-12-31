@@ -207,6 +207,23 @@
 | created_at | datetime | 作成日時 |
 | updated_at | datetime | 更新日時 |
 
+#### ServiceSubscriptionHistory（サービス契約変更履歴）
+| カラム名 | 型 | 説明 |
+|---------|-----|------|
+| id | int | 履歴ID (PK) |
+| subscription_id | int | 契約ID (FK) |
+| changed_by_user_id | int | 変更者ID (FK) |
+| change_type | string | 変更種別（create/update/delete） |
+| old_status | string | 変更前の契約状態（null許可） |
+| new_status | string | 変更後の契約状態（null許可） |
+| old_end_date | date | 変更前の終了日（null許可） |
+| new_end_date | date | 変更後の終了日（null許可） |
+| old_monthly_price | decimal | 変更前の月額料金（null許可） |
+| new_monthly_price | decimal | 変更後の月額料金（null許可） |
+| change_reason | text | 変更理由 |
+| changed_at | datetime | 変更日時 |
+| created_at | datetime | 作成日時 |
+
 ### 3.2 リレーションシップ
 
 ```mermaid
@@ -216,6 +233,8 @@ erDiagram
     Companies ||--o{ Customers : "has"
     Companies ||--o{ CompanyServiceSubscriptions : "subscribes"
     Services ||--o{ CompanyServiceSubscriptions : "subscribed_by"
+    CompanyServiceSubscriptions ||--o{ ServiceSubscriptionHistory : "has_history"
+    Users ||--o{ ServiceSubscriptionHistory : "changes"
     Branches ||--o{ Departments : "has"
     Branches ||--o{ UserBranchAssignments : "assigned_to"
     Departments ||--o{ UserDepartmentAssignments : "assigned_to"
@@ -373,6 +392,22 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
+
+    ServiceSubscriptionHistory {
+        int id PK
+        int subscription_id FK
+        int changed_by_user_id FK
+        string change_type "create/update/delete"
+        string old_status
+        string new_status
+        date old_end_date
+        date new_end_date
+        decimal old_monthly_price
+        decimal new_monthly_price
+        text change_reason
+        datetime changed_at
+        datetime created_at
+    }
 ```
 
 #### 主要なリレーションシップ
@@ -401,8 +436,12 @@ erDiagram
 **サービス管理関連**
 - **Services ← CompanyServiceSubscriptions**: 1サービスが複数の企業に契約される
 - **Companies ← CompanyServiceSubscriptions**: 1企業が複数のサービスを契約可能
+- **CompanyServiceSubscriptions ← ServiceSubscriptionHistory**: 1契約に複数の変更履歴が記録される
+- **Users ← ServiceSubscriptionHistory**: 1ユーザーが複数のサービス契約変更を実行
 - **CompanyServiceSubscriptions.status**: 契約状態（active/suspended/cancelled）
+- **ServiceSubscriptionHistory.change_type**: 変更種別（create/update/delete）
 - **日報機能の制御**: service_code="DAILY_REPORT"の契約が有効な場合のみ日報機能へのアクセスを許可
+- **監査ログ**: 全てのサービス契約変更は履歴として記録され、誰がいつ何を変更したか追跡可能
 
 ## 4. 想定される活用例
 
@@ -423,6 +462,9 @@ erDiagram
 - サービス契約状況に基づくアクセス制御
 - 柔軟なサービス追加・停止運用
 - 企業別カスタム料金設定
+- サービス契約変更履歴の追跡と監査
+- 誰がいつ何を変更したかの完全な記録
+- コンプライアンス対応（監査証跡）
 
 ## 5. 将来的な拡張機能候補
 

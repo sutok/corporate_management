@@ -2241,6 +2241,144 @@ Authorization: Bearer {access_token}
 
 ---
 
+### サービス契約変更履歴取得
+
+特定のサービス契約の変更履歴を取得
+
+- **Endpoint**: `GET /api/companies/{company_id}/service-subscriptions/{subscription_id}/history`
+- **認証**: 必要
+- **権限**: システム管理者
+
+#### クエリパラメータ
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| page | integer | - | ページ番号（デフォルト: 1） |
+| per_page | integer | - | 1ページあたり件数（デフォルト: 20） |
+
+#### レスポンス (200 OK)
+```json
+{
+  "status": "success",
+  "data": {
+    "subscription_id": 1,
+    "company_name": "株式会社サンプル",
+    "service_name": "営業日報サービス",
+    "history": [
+      {
+        "id": 3,
+        "change_type": "update",
+        "old_status": "active",
+        "new_status": "suspended",
+        "old_end_date": null,
+        "new_end_date": "2025-12-31",
+        "old_monthly_price": 5000,
+        "new_monthly_price": 5000,
+        "change_reason": "契約一時停止（顧客要望）",
+        "changed_by_user_name": "システム管理者",
+        "changed_at": "2025-12-31T14:00:00Z"
+      },
+      {
+        "id": 2,
+        "change_type": "update",
+        "old_status": "active",
+        "new_status": "active",
+        "old_end_date": null,
+        "new_end_date": null,
+        "old_monthly_price": 5000,
+        "new_monthly_price": 6000,
+        "change_reason": "料金改定",
+        "changed_by_user_name": "システム管理者",
+        "changed_at": "2025-06-01T10:00:00Z"
+      },
+      {
+        "id": 1,
+        "change_type": "create",
+        "old_status": null,
+        "new_status": "active",
+        "old_end_date": null,
+        "new_end_date": null,
+        "old_monthly_price": null,
+        "new_monthly_price": 5000,
+        "change_reason": "新規契約",
+        "changed_by_user_name": "システム管理者",
+        "changed_at": "2025-01-01T09:00:00Z"
+      }
+    ],
+    "pagination": {
+      "current_page": 1,
+      "per_page": 20,
+      "total_pages": 1,
+      "total_count": 3
+    }
+  }
+}
+```
+
+---
+
+### 企業の全サービス契約変更履歴取得
+
+企業の全サービス契約に関する変更履歴を取得
+
+- **Endpoint**: `GET /api/companies/{company_id}/service-subscriptions/history`
+- **認証**: 必要
+- **権限**: システム管理者
+
+#### クエリパラメータ
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| service_id | integer | - | サービスIDでフィルタ |
+| change_type | string | - | 変更種別でフィルタ（create/update/delete） |
+| from_date | date | - | 変更日時の開始日（YYYY-MM-DD） |
+| to_date | date | - | 変更日時の終了日（YYYY-MM-DD） |
+| page | integer | - | ページ番号（デフォルト: 1） |
+| per_page | integer | - | 1ページあたり件数（デフォルト: 20） |
+
+#### レスポンス (200 OK)
+```json
+{
+  "status": "success",
+  "data": {
+    "company_id": 1,
+    "company_name": "株式会社サンプル",
+    "history": [
+      {
+        "id": 3,
+        "subscription_id": 1,
+        "service_name": "営業日報サービス",
+        "change_type": "update",
+        "old_status": "active",
+        "new_status": "suspended",
+        "change_reason": "契約一時停止（顧客要望）",
+        "changed_by_user_name": "システム管理者",
+        "changed_at": "2025-12-31T14:00:00Z"
+      },
+      {
+        "id": 2,
+        "subscription_id": 2,
+        "service_name": "顧客管理サービス",
+        "change_type": "create",
+        "old_status": null,
+        "new_status": "active",
+        "change_reason": "新規契約",
+        "changed_by_user_name": "システム管理者",
+        "changed_at": "2025-12-15T10:00:00Z"
+      }
+    ],
+    "pagination": {
+      "current_page": 1,
+      "per_page": 20,
+      "total_pages": 1,
+      "total_count": 2
+    }
+  }
+}
+```
+
+---
+
 ## エラーコード一覧
 
 | エラーコード | HTTPステータス | 説明 |
