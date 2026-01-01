@@ -14,6 +14,8 @@ from app.models.plan import Plan
 from app.models.comment import Comment
 from app.models.user_assignment import UserBranchAssignment, UserDepartmentAssignment
 from app.models.service import Service, CompanyServiceSubscription, ServiceSubscriptionHistory
+from app.models.facility import Facility
+from app.models.facility_assignment import FacilityAssignment
 
 __all__ = [
     "Company",
@@ -31,4 +33,6 @@ __all__ = [
     "Service",
     "CompanyServiceSubscription",
     "ServiceSubscriptionHistory",
+    "Facility",
+    "FacilityAssignment",
 ]
