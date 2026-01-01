@@ -56,6 +56,7 @@ from app.routers import (
     daily_reports,
     facilities,
     facility_assignments,
+    subscriptions,
 )
 
 app.include_router(auth.router)
@@ -67,6 +68,7 @@ app.include_router(customers.router)
 app.include_router(daily_reports.router)
 app.include_router(facilities.router)
 app.include_router(facility_assignments.router)
+app.include_router(subscriptions.router)
 
 
 if __name__ == "__main__":

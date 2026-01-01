@@ -16,6 +16,10 @@ from app.models.user_assignment import UserBranchAssignment, UserDepartmentAssig
 from app.models.service import Service, CompanyServiceSubscription, ServiceSubscriptionHistory
 from app.models.facility import Facility
 from app.models.facility_assignment import FacilityAssignment
+from app.models.permission import Permission
+from app.models.role import Role
+from app.models.role_permission import RolePermission
+from app.models.user_role import UserRole
 
 __all__ = [
     "Company",
@@ -35,4 +39,8 @@ __all__ = [
     "ServiceSubscriptionHistory",
     "Facility",
     "FacilityAssignment",
+    "Permission",
+    "Role",
+    "RolePermission",
+    "UserRole",
 ]

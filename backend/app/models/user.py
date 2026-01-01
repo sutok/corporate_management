@@ -58,6 +58,12 @@ class User(Base):
         "ServiceSubscriptionHistory",
         back_populates="changed_by_user",
     )
+    user_roles = relationship(
+        "UserRole",
+        foreign_keys="UserRole.user_id",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<User(id={self.id}, name='{self.name}', email='{self.email}')>"

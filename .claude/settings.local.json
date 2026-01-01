@@ -43,7 +43,14 @@
       "mcp__serena__find_symbol",
       "mcp__serena__activate_project",
       "Bash(timeout 5 .venv/bin/python:*)",
-      "Bash(docker-compose config:*)"
+      "Bash(docker-compose config:*)",
+      "Bash(docker-compose build:*)",
+      "Bash(docker-compose logs:*)",
+      "Bash(docker-compose exec:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Skill(sc:load)",
+      "Bash(.venv/bin/alembic:*)",
+      "Bash(podman ps:*)"
     ]
   }
 }
