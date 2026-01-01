@@ -2,13 +2,13 @@
 Service Subscription API テスト
 """
 import pytest
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.company import Company
 from app.models.user import User
-from app.models.service import Service, CompanyServiceSubscription
+from app.models.service import Service, CompanyServiceSubscription, ServiceSubscriptionHistory
 from app.models.permission import Permission
 from app.models.role import Role
 from app.models.role_permission import RolePermission
@@ -206,8 +206,32 @@ async def test_get_subscriptions_without_permission(client: AsyncClient, db_sess
 @pytest.mark.asyncio
 async def test_get_subscription_history_success(client: AsyncClient, db_session: AsyncSession):
     """契約履歴取得成功テスト"""
-    await create_test_data(db_session)
+    test_data = await create_test_data(db_session)
     token = await get_auth_token(client)
+
+    # 履歴レコード作成
+    history1 = ServiceSubscriptionHistory(
+        subscription_id=test_data["subscription"].id,
+        changed_by_user_id=test_data["user"].id,
+        change_type="create",
+        new_status="active",
+        new_monthly_price=10000.00,
+        change_reason="初回契約",
+        changed_at=datetime.now(),
+    )
+    history2 = ServiceSubscriptionHistory(
+        subscription_id=test_data["subscription"].id,
+        changed_by_user_id=test_data["user"].id,
+        change_type="update",
+        old_status="active",
+        new_status="active",
+        old_monthly_price=10000.00,
+        new_monthly_price=12000.00,
+        change_reason="価格改定",
+        changed_at=datetime.now() + timedelta(days=1),
+    )
+    db_session.add_all([history1, history2])
+    await db_session.commit()
 
     # 契約履歴取得
     response = await client.get(
@@ -217,8 +241,95 @@ async def test_get_subscription_history_success(client: AsyncClient, db_session:
 
     assert response.status_code == 200
     data = response.json()
-    assert "message" in data
-    assert "実装予定" in data["message"]
+    assert isinstance(data, list)
+    assert len(data) == 2
+    # 新しい順にソートされているか確認
+    assert data[0]["change_type"] == "update"
+    assert data[0]["new_monthly_price"] == 12000.00
+    assert data[1]["change_type"] == "create"
+    assert data[1]["new_monthly_price"] == 10000.00
+
+
+@pytest.mark.asyncio
+async def test_get_subscription_history_with_filter(client: AsyncClient, db_session: AsyncSession):
+    """契約履歴取得 - subscription_id フィルタ"""
+    test_data = await create_test_data(db_session)
+    token = await get_auth_token(client)
+
+    # 履歴レコード作成
+    history = ServiceSubscriptionHistory(
+        subscription_id=test_data["subscription"].id,
+        changed_by_user_id=test_data["user"].id,
+        change_type="create",
+        new_status="active",
+        new_monthly_price=10000.00,
+        change_reason="初回契約",
+        changed_at=datetime.now(),
+    )
+    db_session.add(history)
+    await db_session.commit()
+
+    # 特定の契約の履歴取得
+    response = await client.get(
+        f"/api/subscriptions/history?subscription_id={test_data['subscription'].id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 1
+    assert data[0]["subscription_id"] == test_data["subscription"].id
+
+
+@pytest.mark.asyncio
+async def test_get_subscription_history_forbidden(client: AsyncClient, db_session: AsyncSession):
+    """契約履歴取得 - 他社の契約履歴はアクセス不可"""
+    test_data = await create_test_data(db_session)
+
+    # 他社の企業とサービス契約を作成
+    other_company = Company(name="他社")
+    db_session.add(other_company)
+    await db_session.flush()
+
+    other_subscription = CompanyServiceSubscription(
+        company_id=other_company.id,
+        service_id=test_data["service"].id,
+        status="active",
+        start_date=date.today(),
+        monthly_price=10000.00,
+    )
+    db_session.add(other_subscription)
+    await db_session.commit()
+
+    token = await get_auth_token(client)
+
+    # 他社の契約履歴にアクセス試行
+    response = await client.get(
+        f"/api/subscriptions/history?subscription_id={other_subscription.id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 403
+    assert "他社の契約履歴は閲覧できません" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_get_subscription_history_empty(client: AsyncClient, db_session: AsyncSession):
+    """契約履歴取得 - 履歴が存在しない場合"""
+    await create_test_data(db_session)
+    token = await get_auth_token(client)
+
+    # 履歴レコードを作成せずに取得
+    response = await client.get(
+        "/api/subscriptions/history",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 0
 
 
 @pytest.mark.asyncio

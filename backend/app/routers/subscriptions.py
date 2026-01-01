@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.user import User
-from app.models.service import CompanyServiceSubscription, Service
+from app.models.service import CompanyServiceSubscription, Service, ServiceSubscriptionHistory
 from app.auth.permissions import require_permission, require_any_permission
 
 router = APIRouter(prefix="/api/subscriptions", tags=["subscriptions"])
@@ -46,6 +46,7 @@ async def get_subscriptions(
 
 @router.get("/history", status_code=status.HTTP_200_OK)
 async def get_subscription_history(
+    subscription_id: int = None,
     current_user: User = Depends(require_permission("subscription.history")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -53,9 +54,54 @@ async def get_subscription_history(
     契約履歴取得
 
     必要な権限: subscription.history
+
+    Parameters:
+    - subscription_id: 特定の契約の履歴のみ取得（オプション）
     """
-    # TODO: ServiceSubscriptionHistory の実装
-    return {"message": "契約履歴機能は実装予定です"}
+    # 自社の契約IDを取得
+    company_subscriptions_query = select(CompanyServiceSubscription.id).where(
+        CompanyServiceSubscription.company_id == current_user.company_id
+    )
+    company_subscriptions_result = await db.execute(company_subscriptions_query)
+    company_subscription_ids = [row[0] for row in company_subscriptions_result.fetchall()]
+
+    # 履歴クエリ構築
+    query = select(ServiceSubscriptionHistory).where(
+        ServiceSubscriptionHistory.subscription_id.in_(company_subscription_ids)
+    )
+
+    # 特定の契約IDが指定された場合
+    if subscription_id is not None:
+        # 自社の契約かチェック
+        if subscription_id not in company_subscription_ids:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="他社の契約履歴は閲覧できません"
+            )
+        query = query.where(ServiceSubscriptionHistory.subscription_id == subscription_id)
+
+    # 履歴を新しい順に取得
+    query = query.order_by(ServiceSubscriptionHistory.changed_at.desc())
+    result = await db.execute(query)
+    history_records = result.scalars().all()
+
+    return [
+        {
+            "id": record.id,
+            "subscription_id": record.subscription_id,
+            "change_type": record.change_type,
+            "old_status": record.old_status,
+            "new_status": record.new_status,
+            "old_end_date": record.old_end_date,
+            "new_end_date": record.new_end_date,
+            "old_monthly_price": float(record.old_monthly_price) if record.old_monthly_price else None,
+            "new_monthly_price": float(record.new_monthly_price) if record.new_monthly_price else None,
+            "change_reason": record.change_reason,
+            "changed_by_user_id": record.changed_by_user_id,
+            "changed_at": record.changed_at,
+        }
+        for record in history_records
+    ]
 
 
 @router.post("/{service_id}/subscribe", status_code=status.HTTP_201_CREATED)
