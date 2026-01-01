@@ -19,7 +19,31 @@
       "Bash(git branch:*)",
       "Bash(gh issue create:*)",
       "Bash(gh secret:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(python3:*)",
+      "Bash(.venv/bin/pip install:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose ps:*)",
+      "Bash(lsof:*)",
+      "Bash(.venv/bin/alembic init:*)",
+      "Bash(.venv/bin/alembic revision:*)",
+      "Bash(.venv/bin/alembic upgrade:*)",
+      "Bash(PGPASSWORD=attendance_password psql:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker ps:*)",
+      "Bash(.venv/bin/python:*)",
+      "Bash(pkill:*)",
+      "Bash(.venv/bin/pytest tests/test_auth.py -v)",
+      "Bash(.venv/bin/pytest tests/test_auth.py::test_login_success -v)",
+      "Bash(.venv/bin/pytest tests/test_auth.py::test_login_success -v -s)",
+      "Bash(.venv/bin/pytest tests/test_auth.py::test_login_invalid_email -v)",
+      "Bash(.venv/bin/pytest tests/ -v --tb=short)",
+      "mcp__serena__find_symbol",
+      "mcp__serena__activate_project",
+      "Bash(timeout 5 .venv/bin/python:*)",
+      "Bash(docker-compose config:*)"
     ]
   }
 }

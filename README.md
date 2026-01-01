@@ -6,6 +6,7 @@
 
 ### バックエンド
 - **フレームワーク**: FastAPI (Python 3.11+)
+- **パッケージマネージャー**: uv (pip比10-100倍高速)
 - **データベース**: PostgreSQL 16
 - **ORM**: SQLAlchemy 2.0 (非同期対応)
 - **マイグレーション**: Alembic
@@ -68,12 +69,19 @@ cd attendance
 ```bash
 cd backend
 
+# uvインストール（高速なPythonパッケージマネージャー）
+# macOS/Linux:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows (PowerShell):
+# irm https://astral.sh/uv/install.ps1 | iex
+
 # Python仮想環境作成・有効化
-python -m venv .venv
+uv venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-# 依存関係インストール
-pip install -r requirements.txt
+# 依存関係インストール（uvは従来のpipより10-100倍高速）
+uv pip install -r requirements.txt
 
 # 環境変数設定
 cp .env.example .env

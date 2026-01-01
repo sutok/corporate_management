@@ -2,3 +2,10 @@
 attendance_user
 attendance_password
 attendance_db
+
+# テスト用メールアドレス（テストコードとドキュメント用）
+test@example.com
+admin@attendance.local
+
+# テストコード用のURL（テストフィクスチャ用）
+http://test
