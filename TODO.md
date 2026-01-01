@@ -1,6 +1,6 @@
 # プロジェクト TODO リスト
 
-**最終更新**: 2026-01-01 (フロントエンド基本画面実装完了)
+**最終更新**: 2026-01-01 (Service Subscription History機能実装完了)
 **プロジェクト**: 営業日報システム (FastAPI + React)
 
 ---
@@ -34,8 +34,9 @@
 ### テスト
 - [x] 全APIルーターのテスト実装 (11ファイル)
 - [x] Permission管理テスト (test_permissions.py - 7テストケース)
-- [x] Subscriptions APIテスト (test_subscriptions.py - 5テストケース)
-- [x] テスト実行確認 (12/12 成功)
+- [x] Subscriptions APIテスト (test_subscriptions.py - 8テストケース)
+- [x] Service Subscription History テスト (4テストケース追加)
+- [x] テスト実行確認 (全テスト成功)
 
 ### データベース
 - [x] スキーマ設計とマイグレーション
@@ -122,24 +123,26 @@ async def endpoint(
 
 ### 🟡 中優先度 (機能拡張)
 
-#### 3. Service Subscription History 機能実装
-**説明**: 契約履歴の取得・表示機能（現在はモックレスポンスのみ）
+#### 3. Service Subscription History 機能実装 ✅ **完了**
+**説明**: 契約履歴の取得・表示機能
 
-**場所**: `app/routers/subscriptions.py:57-58`
+**場所**: `app/routers/subscriptions.py:47-104`
 
 **実装内容**:
-- [ ] ServiceSubscriptionHistory モデル活用
-- [ ] 履歴取得エンドポイント実装
-- [ ] 履歴データの整形・返却
-- [ ] テストケース追加
+- [x] ServiceSubscriptionHistory モデル活用
+- [x] 履歴取得エンドポイント実装
+- [x] 履歴データの整形・返却
+- [x] テストケース追加
 
-**現在のコード**:
-```python
-# TODO: ServiceSubscriptionHistory の実装
-return {"message": "契約履歴機能は実装予定です"}
-```
+**実装詳細**:
+- GET `/api/subscriptions/history` エンドポイント実装
+- オプションの `subscription_id` パラメータでフィルタリング
+- 会社レベルのアクセス制御（他社データ防止）
+- 新しい順にソート（changed_at DESC）
+- 4つのテストケース追加（成功、フィルタ、アクセス制御、空データ）
 
-**推定工数**: 2-3時間
+**実施日**: 2026-01-01
+**PR**: #4
 
 ---
 

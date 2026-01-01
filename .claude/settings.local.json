@@ -58,7 +58,13 @@
       "mcp__context7__resolve-library-id",
       "mcp__context7__query-docs",
       "Bash(timeout 10 npm run dev:*)",
-      "Bash(docker-compose down:*)"
+      "Bash(docker-compose down:*)",
+      "Bash(find:*)",
+      "Bash(.venv/bin/pytest backend/tests/test_subscriptions.py -v)",
+      "Bash(../.venv/bin/pip install:*)",
+      "Bash(backend/.venv/bin/pip install:*)",
+      "Bash(backend/.venv/bin/pytest backend/tests/test_subscriptions.py -v)",
+      "Bash(DATABASE_URL=\"postgresql://attendance_user:attendance_password@localhost:5432/attendance_db\" DATABASE_URL_ASYNC=\"postgresql+asyncpg://attendance_user:attendance_password@localhost:5432/attendance_db\" SECRET_KEY=\"your-secret-key-change-this-in-production\" .venv/bin/pytest:*)"
     ]
   }
 }
