@@ -58,22 +58,21 @@ async def get_subscription_history(
     Parameters:
     - subscription_id: 特定の契約の履歴のみ取得（オプション）
     """
-    # 自社の契約IDを取得
-    company_subscriptions_query = select(CompanyServiceSubscription.id).where(
-        CompanyServiceSubscription.company_id == current_user.company_id
-    )
-    company_subscriptions_result = await db.execute(company_subscriptions_query)
-    company_subscription_ids = [row[0] for row in company_subscriptions_result.fetchall()]
-
-    # 履歴クエリ構築
+    # 履歴クエリ構築（company_idで直接フィルタリング）
     query = select(ServiceSubscriptionHistory).where(
-        ServiceSubscriptionHistory.subscription_id.in_(company_subscription_ids)
+        ServiceSubscriptionHistory.company_id == current_user.company_id
     )
 
     # 特定の契約IDが指定された場合
     if subscription_id is not None:
-        # 自社の契約かチェック
-        if subscription_id not in company_subscription_ids:
+        # 自社の契約かチェック（company_idで確認）
+        subscription_check = await db.execute(
+            select(CompanyServiceSubscription.id).where(
+                CompanyServiceSubscription.id == subscription_id,
+                CompanyServiceSubscription.company_id == current_user.company_id
+            )
+        )
+        if subscription_check.scalar_one_or_none() is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="他社の契約履歴は閲覧できません"
@@ -88,6 +87,7 @@ async def get_subscription_history(
     return [
         {
             "id": record.id,
+            "company_id": record.company_id,
             "subscription_id": record.subscription_id,
             "change_type": record.change_type,
             "old_status": record.old_status,

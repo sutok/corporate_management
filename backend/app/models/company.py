@@ -40,6 +40,11 @@ class Company(Base):
         back_populates="company",
         cascade="all, delete-orphan",
     )
+    subscription_history = relationship(
+        "ServiceSubscriptionHistory",
+        back_populates="company",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<Company(id={self.id}, name='{self.name}')>"

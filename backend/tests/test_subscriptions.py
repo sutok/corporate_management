@@ -211,6 +211,7 @@ async def test_get_subscription_history_success(client: AsyncClient, db_session:
 
     # 履歴レコード作成
     history1 = ServiceSubscriptionHistory(
+        company_id=test_data["company"].id,
         subscription_id=test_data["subscription"].id,
         changed_by_user_id=test_data["user"].id,
         change_type="create",
@@ -220,6 +221,7 @@ async def test_get_subscription_history_success(client: AsyncClient, db_session:
         changed_at=datetime.now(),
     )
     history2 = ServiceSubscriptionHistory(
+        company_id=test_data["company"].id,
         subscription_id=test_data["subscription"].id,
         changed_by_user_id=test_data["user"].id,
         change_type="update",
@@ -245,8 +247,10 @@ async def test_get_subscription_history_success(client: AsyncClient, db_session:
     assert len(data) == 2
     # 新しい順にソートされているか確認
     assert data[0]["change_type"] == "update"
+    assert data[0]["company_id"] == test_data["company"].id
     assert data[0]["new_monthly_price"] == 12000.00
     assert data[1]["change_type"] == "create"
+    assert data[1]["company_id"] == test_data["company"].id
     assert data[1]["new_monthly_price"] == 10000.00
 
 
@@ -258,6 +262,7 @@ async def test_get_subscription_history_with_filter(client: AsyncClient, db_sess
 
     # 履歴レコード作成
     history = ServiceSubscriptionHistory(
+        company_id=test_data["company"].id,
         subscription_id=test_data["subscription"].id,
         changed_by_user_id=test_data["user"].id,
         change_type="create",
