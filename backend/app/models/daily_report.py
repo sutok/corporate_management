@@ -14,6 +14,13 @@ class DailyReport(Base):
     __tablename__ = "daily_reports"
 
     id = Column(Integer, primary_key=True, index=True, comment="日報ID")
+    company_id = Column(
+        Integer,
+        ForeignKey("companies.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        comment="企業ID",
+    )
     user_id = Column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -31,6 +38,7 @@ class DailyReport(Base):
     )
 
     # リレーションシップ
+    company = relationship("Company", back_populates="daily_reports")
     user = relationship("User", back_populates="daily_reports")
     visit_records = relationship("VisitRecord", back_populates="daily_report", cascade="all, delete-orphan")
     problems = relationship("Problem", back_populates="daily_report", cascade="all, delete-orphan")
