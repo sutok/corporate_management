@@ -50,7 +50,10 @@
       "mcp__sequential-thinking__sequentialthinking",
       "Skill(sc:load)",
       "Bash(.venv/bin/alembic:*)",
-      "Bash(podman ps:*)"
+      "Bash(podman ps:*)",
+      "Bash(.venv/bin/pytest tests/test_permissions.py -v)",
+      "Bash(.venv/bin/pytest tests/test_subscriptions.py -v)",
+      "Bash(.venv/bin/pytest tests/test_permissions.py tests/test_subscriptions.py -v --tb=short)"
     ]
   }
 }

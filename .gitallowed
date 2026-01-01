@@ -9,3 +9,9 @@ admin@attendance.local
 
 # テストコード用のURL（テストフィクスチャ用）
 http://test
+
+# テストコード内の権限コード（test.view, test.create など）
+test\.view
+test\.create
+test_role
+resource_type="test"
