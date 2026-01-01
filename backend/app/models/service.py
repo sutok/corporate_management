@@ -94,6 +94,13 @@ class ServiceSubscriptionHistory(Base):
     __tablename__ = "service_subscription_history"
 
     id = Column(Integer, primary_key=True, index=True, comment="履歴ID")
+    company_id = Column(
+        Integer,
+        ForeignKey("companies.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        comment="企業ID",
+    )
     subscription_id = Column(
         Integer,
         ForeignKey("company_service_subscriptions.id", ondelete="CASCADE"),
@@ -120,6 +127,7 @@ class ServiceSubscriptionHistory(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="作成日時")
 
     # リレーションシップ
+    company = relationship("Company", back_populates="subscription_history")
     subscription = relationship("CompanyServiceSubscription", back_populates="history")
     changed_by_user = relationship("User", back_populates="subscription_changes")
 
