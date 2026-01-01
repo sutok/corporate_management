@@ -27,11 +27,8 @@ async def get_daily_reports(
     db: AsyncSession = Depends(get_db),
 ):
     """日報一覧取得（同じ企業のユーザーのみ）"""
-    query = (
-        select(DailyReport)
-        .join(User)
-        .where(User.company_id == current_user.company_id)
-    )
+    # company_idで直接フィルタリング（JOIN不要）
+    query = select(DailyReport).where(DailyReport.company_id == current_user.company_id)
 
     if user_id:
         query = query.where(DailyReport.user_id == user_id)
@@ -55,9 +52,7 @@ async def get_daily_report(
 ):
     """日報詳細取得"""
     result = await db.execute(
-        select(DailyReport)
-        .join(User)
-        .where(DailyReport.id == report_id)
+        select(DailyReport).where(DailyReport.id == report_id)
     )
     daily_report = result.scalar_one_or_none()
 
@@ -67,10 +62,8 @@ async def get_daily_report(
             detail="日報が見つかりません",
         )
 
-    result = await db.execute(select(User).where(User.id == daily_report.user_id))
-    user = result.scalar_one_or_none()
-
-    if user.company_id != current_user.company_id:
+    # company_idで直接チェック（JOIN不要）
+    if daily_report.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="権限がありません",
@@ -102,7 +95,11 @@ async def create_daily_report(
                 detail="ユーザーが見つかりません",
             )
 
-    new_daily_report = DailyReport(**daily_report.model_dump())
+    # company_idを設定
+    new_daily_report = DailyReport(
+        **daily_report.model_dump(),
+        company_id=current_user.company_id
+    )
     db.add(new_daily_report)
     await db.commit()
     await db.refresh(new_daily_report)
@@ -126,10 +123,8 @@ async def update_daily_report(
             detail="日報が見つかりません",
         )
 
-    result = await db.execute(select(User).where(User.id == daily_report.user_id))
-    user = result.scalar_one_or_none()
-
-    if user.company_id != current_user.company_id:
+    # company_idで直接チェック（JOIN不要）
+    if daily_report.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="権限がありません",
@@ -166,10 +161,8 @@ async def delete_daily_report(
             detail="日報が見つかりません",
         )
 
-    result = await db.execute(select(User).where(User.id == daily_report.user_id))
-    user = result.scalar_one_or_none()
-
-    if user.company_id != current_user.company_id:
+    # company_idで直接チェック（JOIN不要）
+    if daily_report.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="権限がありません",
