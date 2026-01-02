@@ -22,14 +22,14 @@
 ## サービス構成
 
 ### 1. PostgreSQL (Database)
-- **コンテナ名**: `attendance_db`
+- **コンテナ名**: `corporate_db`
 - **ポート**: `5432`
-- **ユーザー**: `attendance_user`
-- **パスワード**: `attendance_password`
-- **データベース名**: `attendance_db`
+- **ユーザー**: `corporate_user`
+- **パスワード**: `corporate_password`
+- **データベース名**: `corporate_db`
 
 ### 2. Backend (FastAPI)
-- **コンテナ名**: `attendance_backend`
+- **コンテナ名**: `corporate_backend`
 - **ポート**: `8000`
 - **パッケージマネージャー**: uv (Rust製、pip比10-100倍高速)
 - **API URL**: http://localhost:8000
@@ -46,7 +46,7 @@ RUN uv pip install --system -r requirements.txt
 詳細は [UV_GUIDE.md](./UV_GUIDE.md) を参照してください。
 
 ### 3. pgAdmin
-- **コンテナ名**: `attendance_pgadmin`
+- **コンテナ名**: `corporate_pgadmin`
 - **ポート**: `5050`
 - **URL**: http://localhost:5050
 - **メール**: admin@attendance.local
@@ -93,7 +93,7 @@ docker-compose ps
 docker-compose logs -f backend
 
 # データベース接続確認
-docker-compose exec postgres psql -U attendance_user -d attendance_db -c "\dt"
+docker-compose exec postgres psql -U corporate_user -d corporate_db -c "\dt"
 ```
 
 ## 便利なコマンド
@@ -144,7 +144,7 @@ docker-compose exec backend bash
 docker-compose exec postgres bash
 
 # PostgreSQLに直接接続
-docker-compose exec postgres psql -U attendance_user -d attendance_db
+docker-compose exec postgres psql -U corporate_user -d corporate_db
 
 # backendコンテナでコマンド実行
 docker-compose exec backend python -m pytest
@@ -154,10 +154,10 @@ docker-compose exec backend python -m pytest
 
 ```bash
 # データベースバックアップ
-docker-compose exec postgres pg_dump -U attendance_user attendance_db > backup.sql
+docker-compose exec postgres pg_dump -U corporate_user corporate_db > backup.sql
 
 # データベースリストア
-docker-compose exec -T postgres psql -U attendance_user -d attendance_db < backup.sql
+docker-compose exec -T postgres psql -U corporate_user -d corporate_db < backup.sql
 
 # データベース再作成
 docker-compose down -v
@@ -230,7 +230,7 @@ kill -9 <PID>
 docker-compose ps postgres
 
 # ヘルスチェック確認
-docker-compose exec postgres pg_isready -U attendance_user -d attendance_db
+docker-compose exec postgres pg_isready -U corporate_user -d corporate_db
 
 # PostgreSQL再起動
 docker-compose restart postgres
@@ -264,8 +264,8 @@ docker-compose exec backend alembic upgrade head
 ```yaml
 environment:
   - APP_NAME=営業日報システムAPI
-  - DATABASE_URL=postgresql://attendance_user:attendance_password@postgres:5432/attendance_db
-  - DATABASE_URL_ASYNC=postgresql+asyncpg://attendance_user:attendance_password@postgres:5432/attendance_db
+  - DATABASE_URL=postgresql://corporate_user:corporate_password@postgres:5432/corporate_db
+  - DATABASE_URL_ASYNC=postgresql+asyncpg://corporate_user:corporate_password@postgres:5432/corporate_db
   - SECRET_KEY=your-secret-key-change-this-in-production
   - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
 ```

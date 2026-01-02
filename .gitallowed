@@ -1,7 +1,7 @@
 # 開発環境用の公開認証情報（本番環境では使用しない）
-attendance_user
-attendance_password
-attendance_db
+corporate_user
+corporate_password
+corporate_db
 
 # テスト用メールアドレス（テストコードとドキュメント用）
 test@example.com

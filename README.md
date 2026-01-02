@@ -105,9 +105,9 @@ docker-compose ps
 **PostgreSQL接続情報:**
 - Host: localhost
 - Port: 5432
-- Database: attendance_db
-- User: attendance_user
-- Password: attendance_password
+- Database: corporate_db
+- User: corporate_user
+- Password: corporate_password
 
 **pgAdmin接続情報:**
 - URL: http://localhost:5050

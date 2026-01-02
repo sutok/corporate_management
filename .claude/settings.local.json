@@ -30,7 +30,7 @@
       "Bash(.venv/bin/alembic init:*)",
       "Bash(.venv/bin/alembic revision:*)",
       "Bash(.venv/bin/alembic upgrade:*)",
-      "Bash(PGPASSWORD=attendance_password psql:*)",
+      "Bash(PGPASSWORD=corporate_password psql:*)",
       "Bash(docker exec:*)",
       "Bash(docker ps:*)",
       "Bash(.venv/bin/python:*)",
@@ -64,7 +64,10 @@
       "Bash(../.venv/bin/pip install:*)",
       "Bash(backend/.venv/bin/pip install:*)",
       "Bash(backend/.venv/bin/pytest backend/tests/test_subscriptions.py -v)",
-      "Bash(DATABASE_URL=\"postgresql://attendance_user:attendance_password@localhost:5432/attendance_db\" DATABASE_URL_ASYNC=\"postgresql+asyncpg://attendance_user:attendance_password@localhost:5432/attendance_db\" SECRET_KEY=\"your-secret-key-change-this-in-production\" .venv/bin/pytest:*)"
+      "Bash(DATABASE_URL=\"postgresql://corporate_user:corporate_password@localhost:5432/corporate_db\" DATABASE_URL_ASYNC=\"postgresql+asyncpg://corporate_user:corporate_password@localhost:5432/corporate_db\" SECRET_KEY=\"your-secret-key-change-this-in-production\" .venv/bin/pytest:*)",
+      "Bash(DATABASE_URL=\"postgresql://corporate_user:corporate_password@localhost:5432/corporate_db\" .venv/bin/alembic upgrade:*)",
+      "Bash(DATABASE_URL=\"postgresql://corporate_user:corporate_password@localhost:5432/corporate_db\" .venv/bin/alembic current:*)",
+      "Bash(grep:*)"
     ]
   }
 }

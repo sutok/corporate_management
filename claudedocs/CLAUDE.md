@@ -112,6 +112,7 @@
 | カラム名 | 型 | 説明 |
 |---------|-----|------|
 | id | int | 日報ID (PK) |
+| company_id | int | 所属企業ID (FK) |
 | user_id | int | 作成者ID (FK) |
 | report_date | date | 報告日 |
 | created_at | datetime | 作成日時 |
@@ -211,6 +212,7 @@
 | カラム名 | 型 | 説明 |
 |---------|-----|------|
 | id | int | 履歴ID (PK) |
+| company_id | int | 企業ID (FK) |
 | subscription_id | int | 契約ID (FK) |
 | changed_by_user_id | int | 変更者ID (FK) |
 | change_type | string | 変更種別（create/update/delete） |
@@ -231,7 +233,9 @@ erDiagram
     Companies ||--o{ Branches : "has"
     Companies ||--o{ Users : "employs"
     Companies ||--o{ Customers : "has"
+    Companies ||--o{ DailyReports : "has"
     Companies ||--o{ CompanyServiceSubscriptions : "subscribes"
+    Companies ||--o{ ServiceSubscriptionHistory : "has"
     Services ||--o{ CompanyServiceSubscriptions : "subscribed_by"
     CompanyServiceSubscriptions ||--o{ ServiceSubscriptionHistory : "has_history"
     Users ||--o{ ServiceSubscriptionHistory : "changes"
@@ -323,6 +327,7 @@ erDiagram
 
     DailyReports {
         int id PK
+        int company_id FK
         int user_id FK
         date report_date
         datetime created_at
@@ -395,6 +400,7 @@ erDiagram
 
     ServiceSubscriptionHistory {
         int id PK
+        int company_id FK
         int subscription_id FK
         int changed_by_user_id FK
         string change_type "create/update/delete"
@@ -422,7 +428,9 @@ erDiagram
 - **UserDepartmentAssignments.is_primary**: 主たる所属部署を示すフラグ
 
 **日報関連**
+- **Companies ← DailyReports**: 1企業に複数の日報が存在（マルチテナンシー対応）
 - **Users ← DailyReports**: 1ユーザーが複数の日報を作成
+- **DailyReports.company_id**: 企業レベルでのデータ分離とパフォーマンス最適化（JOIN不要）
 - **DailyReports ← VisitRecords**: 1日報に複数の訪問記録
 - **DailyReports ← Problems**: 1日報に複数の課題
 - **DailyReports ← Plans**: 1日報に複数の計画
@@ -436,8 +444,10 @@ erDiagram
 **サービス管理関連**
 - **Services ← CompanyServiceSubscriptions**: 1サービスが複数の企業に契約される
 - **Companies ← CompanyServiceSubscriptions**: 1企業が複数のサービスを契約可能
+- **Companies ← ServiceSubscriptionHistory**: 1企業に複数のサービス契約変更履歴が存在（マルチテナンシー対応）
 - **CompanyServiceSubscriptions ← ServiceSubscriptionHistory**: 1契約に複数の変更履歴が記録される
 - **Users ← ServiceSubscriptionHistory**: 1ユーザーが複数のサービス契約変更を実行
+- **ServiceSubscriptionHistory.company_id**: 企業レベルでのデータ分離とパフォーマンス最適化（JOIN不要）
 - **CompanyServiceSubscriptions.status**: 契約状態（active/suspended/cancelled）
 - **ServiceSubscriptionHistory.change_type**: 変更種別（create/update/delete）
 - **日報機能の制御**: service_code="DAILY_REPORT"の契約が有効な場合のみ日報機能へのアクセスを許可
