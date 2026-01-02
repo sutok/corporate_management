@@ -11,8 +11,9 @@ from app.models.permission import Permission
 from app.models.role import Role
 from app.models.role_permission import RolePermission
 from app.models.user_role import UserRole
+from app.models.user_permission import UserPermission
 from app.auth.password import get_password_hash
-from app.auth.permissions import get_user_permissions
+from app.auth.permissions import get_user_permissions, get_user_permissions_detailed
 
 
 @pytest.mark.asyncio
@@ -264,3 +265,238 @@ async def test_user_multiple_roles(db_session: AsyncSession):
     assert "service.view" in permissions
     assert "user.view" in permissions
     assert "user.create" in permissions
+
+
+@pytest.mark.asyncio
+async def test_create_user_permission(db_session: AsyncSession):
+    """個別権限作成テスト"""
+    # 企業とユーザー作成
+    company = Company(name="テスト株式会社")
+    db_session.add(company)
+    await db_session.flush()
+
+    admin_user = User(
+        company_id=company.id,
+        name="管理者",
+        email="admin@example.com",
+        password_hash=get_password_hash("password123"),
+        role="admin",
+    )
+    test_user = User(
+        company_id=company.id,
+        name="テストユーザー",
+        email="test@example.com",
+        password_hash=get_password_hash("password123"),
+        role="staff",
+    )
+    db_session.add_all([admin_user, test_user])
+    await db_session.flush()
+
+    # 権限作成
+    permission = Permission(
+        code="report.approve",
+        name="レポート承認",
+        resource_type="report",
+    )
+    db_session.add(permission)
+    await db_session.flush()
+
+    # ユーザーに個別権限を付与
+    user_perm = UserPermission(
+        user_id=test_user.id,
+        permission_id=permission.id,
+        granted_by=admin_user.id,
+        reason="プロジェクトX期間中のレポート承認担当",
+    )
+    db_session.add(user_perm)
+    await db_session.commit()
+
+    assert user_perm.id is not None
+    assert user_perm.user_id == test_user.id
+    assert user_perm.permission_id == permission.id
+    assert user_perm.granted_by == admin_user.id
+
+
+@pytest.mark.asyncio
+async def test_user_permission_with_role_permission(db_session: AsyncSession):
+    """個別権限とロール権限の組み合わせテスト"""
+    # 企業とユーザー作成
+    company = Company(name="テスト株式会社")
+    db_session.add(company)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="テストユーザー",
+        email="test@example.com",
+        password_hash=get_password_hash("password123"),
+        role="staff",
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    # 権限作成
+    perm_view = Permission(code="report.view", name="レポート閲覧", resource_type="report")
+    perm_approve = Permission(code="report.approve", name="レポート承認", resource_type="report")
+    db_session.add_all([perm_view, perm_approve])
+    await db_session.flush()
+
+    # ロール作成とロール権限付与（report.view のみ）
+    role = Role(
+        company_id=company.id,
+        code="basic_user",
+        name="一般ユーザー",
+        is_system=False,
+    )
+    db_session.add(role)
+    await db_session.flush()
+    db_session.add(RolePermission(role_id=role.id, permission_id=perm_view.id))
+
+    # ユーザーにロールを割り当て
+    db_session.add(UserRole(user_id=user.id, role_id=role.id, assigned_by=user.id))
+
+    # ユーザーに個別権限を付与（report.approve）
+    user_perm = UserPermission(
+        user_id=user.id,
+        permission_id=perm_approve.id,
+        granted_by=user.id,
+        reason="追加権限として付与",
+    )
+    db_session.add(user_perm)
+    await db_session.commit()
+
+    # ユーザーの権限を取得
+    permissions = await get_user_permissions(db_session, user.id)
+
+    # ロール権限（report.view）+ 個別権限（report.approve）= 2つ
+    assert len(permissions) == 2
+    assert "report.view" in permissions
+    assert "report.approve" in permissions
+
+
+@pytest.mark.asyncio
+async def test_get_user_permissions_detailed_with_direct_permissions(db_session: AsyncSession):
+    """詳細権限取得テスト（個別権限 + ロール権限）"""
+    # 企業とユーザー作成
+    company = Company(name="テスト株式会社")
+    db_session.add(company)
+    await db_session.flush()
+
+    admin_user = User(
+        company_id=company.id,
+        name="管理者",
+        email="admin@example.com",
+        password_hash=get_password_hash("password123"),
+        role="admin",
+    )
+    test_user = User(
+        company_id=company.id,
+        name="テストユーザー",
+        email="test@example.com",
+        password_hash=get_password_hash("password123"),
+        role="staff",
+    )
+    db_session.add_all([admin_user, test_user])
+    await db_session.flush()
+
+    # 権限作成
+    perm_view = Permission(code="report.view", name="レポート閲覧", resource_type="report")
+    perm_approve = Permission(code="report.approve", name="レポート承認", resource_type="report")
+    db_session.add_all([perm_view, perm_approve])
+    await db_session.flush()
+
+    # ロール作成（report.view）
+    role = Role(
+        company_id=company.id,
+        code="viewer",
+        name="閲覧者",
+        is_system=False,
+    )
+    db_session.add(role)
+    await db_session.flush()
+    db_session.add(RolePermission(role_id=role.id, permission_id=perm_view.id))
+    db_session.add(UserRole(user_id=test_user.id, role_id=role.id, assigned_by=admin_user.id))
+
+    # 個別権限付与（report.approve）
+    user_perm = UserPermission(
+        user_id=test_user.id,
+        permission_id=perm_approve.id,
+        granted_by=admin_user.id,
+        reason="一時的な承認権限",
+    )
+    db_session.add(user_perm)
+    await db_session.commit()
+
+    # 詳細権限取得
+    detailed = await get_user_permissions_detailed(db_session, test_user.id)
+
+    assert detailed["user_id"] == test_user.id
+    assert len(detailed["permissions"]) == 2
+
+    # 個別権限を確認
+    direct_perms = [p for p in detailed["permissions"] if p["source"] == "direct"]
+    assert len(direct_perms) == 1
+    assert direct_perms[0]["code"] == "report.approve"
+    assert direct_perms[0]["granted_by"] == "管理者"
+    assert direct_perms[0]["reason"] == "一時的な承認権限"
+
+    # ロール権限を確認
+    role_perms = [p for p in detailed["permissions"] if p["source"] == "role"]
+    assert len(role_perms) == 1
+    assert role_perms[0]["code"] == "report.view"
+    assert "閲覧者" in role_perms[0]["via_roles"]
+
+
+@pytest.mark.asyncio
+async def test_direct_permission_overrides_role_in_detailed_view(db_session: AsyncSession):
+    """詳細ビューで個別権限が優先表示されることのテスト"""
+    # 企業とユーザー作成
+    company = Company(name="テスト株式会社")
+    db_session.add(company)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="テストユーザー",
+        email="test@example.com",
+        password_hash=get_password_hash("password123"),
+        role="staff",
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    # 権限作成
+    permission = Permission(code="report.view", name="レポート閲覧", resource_type="report")
+    db_session.add(permission)
+    await db_session.flush()
+
+    # ロール経由で権限付与
+    role = Role(
+        company_id=company.id,
+        code="viewer",
+        name="閲覧者",
+        is_system=False,
+    )
+    db_session.add(role)
+    await db_session.flush()
+    db_session.add(RolePermission(role_id=role.id, permission_id=permission.id))
+    db_session.add(UserRole(user_id=user.id, role_id=role.id, assigned_by=user.id))
+
+    # 同じ権限を個別にも付与
+    user_perm = UserPermission(
+        user_id=user.id,
+        permission_id=permission.id,
+        granted_by=user.id,
+        reason="明示的な個別付与",
+    )
+    db_session.add(user_perm)
+    await db_session.commit()
+
+    # 詳細権限取得
+    detailed = await get_user_permissions_detailed(db_session, user.id)
+
+    # 同じ権限でも個別権限が優先表示される（ロール権限は表示されない）
+    assert len(detailed["permissions"]) == 1
+    assert detailed["permissions"][0]["code"] == "report.view"
+    assert detailed["permissions"][0]["source"] == "direct"
+    assert detailed["permissions"][0]["reason"] == "明示的な個別付与"

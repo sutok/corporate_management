@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.user import User
 from app.models.permission import Permission
+from app.models.role import Role
 from app.models.role_permission import RolePermission
 from app.models.user_role import UserRole
 from app.auth.dependencies import get_current_user
@@ -17,7 +18,7 @@ from app.auth.dependencies import get_current_user
 
 async def get_user_permissions(db: AsyncSession, user_id: int) -> Set[str]:
     """
-    ユーザーの全権限を取得
+    ユーザーの全権限を取得（個別権限 + ロール権限）
 
     Args:
         db: データベースセッション
@@ -26,15 +27,27 @@ async def get_user_permissions(db: AsyncSession, user_id: int) -> Set[str]:
     Returns:
         権限コードのセット（例: {"service.subscribe", "user.view"}）
     """
-    query = (
+    from app.models.user_permission import UserPermission
+
+    # 個別権限を取得
+    direct_query = (
+        select(Permission.code)
+        .join(UserPermission, UserPermission.permission_id == Permission.id)
+        .where(UserPermission.user_id == user_id)
+    )
+
+    # ロール権限を取得
+    role_query = (
         select(Permission.code)
         .join(RolePermission, RolePermission.permission_id == Permission.id)
         .join(UserRole, UserRole.role_id == RolePermission.role_id)
         .where(UserRole.user_id == user_id)
-        .distinct()
     )
 
-    result = await db.execute(query)
+    # UNION で統合
+    combined_query = direct_query.union(role_query)
+
+    result = await db.execute(combined_query)
     permissions = result.scalars().all()
 
     return set(permissions)
@@ -146,35 +159,92 @@ async def get_user_permissions_detailed(
     user_id: int
 ) -> dict:
     """
-    ユーザーの権限を詳細情報付きで取得
+    ユーザーの権限を詳細情報付きで取得（個別権限 + ロール権限）
 
     Args:
         db: データベースセッション
         user_id: ユーザーID
 
     Returns:
-        権限の詳細情報（code, name, description, resource_type）のリスト
+        権限の詳細情報（code, name, description, source, etc.）のリスト
+        source: 'direct' = 個別権限, 'role' = ロール権限
     """
-    query = (
-        select(Permission)
-        .join(RolePermission, RolePermission.permission_id == Permission.id)
-        .join(UserRole, UserRole.role_id == RolePermission.role_id)
-        .where(UserRole.user_id == user_id)
-        .distinct()
+    from app.models.user_permission import UserPermission
+
+    permissions_list = []
+
+    # 個別権限を取得
+    direct_query = (
+        select(
+            Permission.code,
+            Permission.name,
+            Permission.description,
+            Permission.resource_type,
+            UserPermission.granted_by,
+            UserPermission.granted_at,
+            UserPermission.reason
+        )
+        .join(UserPermission, UserPermission.permission_id == Permission.id)
+        .where(UserPermission.user_id == user_id)
     )
 
-    result = await db.execute(query)
-    permissions = result.scalars().all()
+    direct_result = await db.execute(direct_query)
+    for row in direct_result:
+        # granted_by のユーザー名を取得
+        granter_name = None
+        if row.granted_by:
+            granter = await db.get(User, row.granted_by)
+            granter_name = granter.name if granter else None
+
+        permissions_list.append({
+            "code": row.code,
+            "name": row.name,
+            "description": row.description,
+            "resource_type": row.resource_type,
+            "source": "direct",
+            "granted_by": granter_name,
+            "granted_at": row.granted_at.isoformat() if row.granted_at else None,
+            "reason": row.reason,
+        })
+
+    # ロール権限を取得
+    role_query = (
+        select(
+            Permission.code,
+            Permission.name,
+            Permission.description,
+            Permission.resource_type,
+            Role.name.label("role_name")
+        )
+        .join(RolePermission, RolePermission.permission_id == Permission.id)
+        .join(Role, Role.id == RolePermission.role_id)
+        .join(UserRole, UserRole.role_id == Role.id)
+        .where(UserRole.user_id == user_id)
+    )
+
+    role_result = await db.execute(role_query)
+
+    # ロール権限をグループ化（同じ権限が複数のロールから来る場合）
+    role_perms_dict = {}
+    for row in role_result:
+        if row.code not in role_perms_dict:
+            role_perms_dict[row.code] = {
+                "code": row.code,
+                "name": row.name,
+                "description": row.description,
+                "resource_type": row.resource_type,
+                "source": "role",
+                "via_roles": []
+            }
+        role_perms_dict[row.code]["via_roles"].append(row.role_name)
+
+    # 個別権限が既にあるものは除外（個別権限が優先）
+    direct_codes = {p["code"] for p in permissions_list}
+    for code, perm_data in role_perms_dict.items():
+        if code not in direct_codes:
+            permissions_list.append(perm_data)
 
     return {
         "user_id": user_id,
-        "permissions": [
-            {
-                "code": perm.code,
-                "name": perm.name,
-                "description": perm.description,
-                "resource_type": perm.resource_type,
-            }
-            for perm in permissions
-        ]
+        "permissions": permissions_list
     }

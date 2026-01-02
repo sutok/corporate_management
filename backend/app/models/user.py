@@ -64,6 +64,12 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    user_permissions = relationship(
+        "UserPermission",
+        foreign_keys="UserPermission.user_id",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<User(id={self.id}, name='{self.name}', email='{self.email}')>"
