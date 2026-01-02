@@ -39,11 +39,6 @@ class User(Base):
     daily_reports = relationship("DailyReport", back_populates="user", cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="commenter", cascade="all, delete-orphan")
     customers = relationship("Customer", back_populates="assigned_user")
-    facility_assignments = relationship(
-        "FacilityAssignment",
-        back_populates="user",
-        cascade="all, delete-orphan",
-    )
     branch_assignments = relationship(
         "UserBranchAssignment",
         back_populates="user",

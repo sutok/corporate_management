@@ -14,8 +14,6 @@ from app.models.plan import Plan
 from app.models.comment import Comment
 from app.models.user_assignment import UserBranchAssignment, UserDepartmentAssignment
 from app.models.service import Service, CompanyServiceSubscription, ServiceSubscriptionHistory
-from app.models.facility import Facility
-from app.models.facility_assignment import FacilityAssignment
 from app.models.permission import Permission
 from app.models.role import Role
 from app.models.role_permission import RolePermission
@@ -38,8 +36,6 @@ __all__ = [
     "Service",
     "CompanyServiceSubscription",
     "ServiceSubscriptionHistory",
-    "Facility",
-    "FacilityAssignment",
     "Permission",
     "Role",
     "RolePermission",

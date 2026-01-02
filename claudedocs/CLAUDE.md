@@ -494,9 +494,14 @@ erDiagram
 
 @claudedocs/API設計書.md
 
-## 8. テスト仕様書
+## 8. 権限管理システム
+
+@claudedocs/権限管理システム.md
+
+## 9. テスト仕様書
 
 @claudedocs/テスト仕様書.md
+
 
 ---
 

@@ -110,37 +110,6 @@ PERMISSIONS = [
         "description": "企業を削除する",
         "resource_type": "company",
     },
-    # Facility 管理
-    {
-        "code": "facility.view",
-        "name": "施設閲覧",
-        "description": "施設情報を閲覧する",
-        "resource_type": "facility",
-    },
-    {
-        "code": "facility.create",
-        "name": "施設作成",
-        "description": "新しい施設を作成する",
-        "resource_type": "facility",
-    },
-    {
-        "code": "facility.update",
-        "name": "施設更新",
-        "description": "施設情報を更新する",
-        "resource_type": "facility",
-    },
-    {
-        "code": "facility.delete",
-        "name": "施設削除",
-        "description": "施設を削除する",
-        "resource_type": "facility",
-    },
-    {
-        "code": "facility_assignment.manage",
-        "name": "施設所属管理",
-        "description": "ユーザーの施設所属を管理する",
-        "resource_type": "facility",
-    },
     # Report 管理
     {
         "code": "report.view",
@@ -217,7 +186,7 @@ SYSTEM_ROLES = [
     {
         "code": "company_admin",
         "name": "企業管理者",
-        "description": "企業の管理者。ユーザー管理、施設管理、サービス契約を行う",
+        "description": "企業の管理者。ユーザー管理、サービス契約を行う",
         "permissions": [
             "user.view",
             "user.create",
@@ -225,11 +194,6 @@ SYSTEM_ROLES = [
             "user.delete",
             "company.view",
             "company.update",
-            "facility.view",
-            "facility.create",
-            "facility.update",
-            "facility.delete",
-            "facility_assignment.manage",
             "service.view",
             "service.subscribe",
             "service.unsubscribe",
@@ -251,19 +215,6 @@ SYSTEM_ROLES = [
             "service.manage",
             "subscription.view",
             "subscription.history",
-        ],
-    },
-    {
-        "code": "facility_manager",
-        "name": "施設管理者",
-        "description": "施設と施設所属の管理を行う",
-        "permissions": [
-            "facility.view",
-            "facility.create",
-            "facility.update",
-            "facility.delete",
-            "facility_assignment.manage",
-            "user.view",
         ],
     },
     {

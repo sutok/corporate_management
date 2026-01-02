@@ -30,12 +30,6 @@ class Company(Base):
     users = relationship("User", back_populates="company", cascade="all, delete-orphan")
     customers = relationship("Customer", back_populates="company", cascade="all, delete-orphan")
     daily_reports = relationship("DailyReport", back_populates="company", cascade="all, delete-orphan")
-    facilities = relationship("Facility", back_populates="company", cascade="all, delete-orphan")
-    facility_assignments = relationship(
-        "FacilityAssignment",
-        back_populates="company",
-        cascade="all, delete-orphan",
-    )
     service_subscriptions = relationship(
         "CompanyServiceSubscription",
         back_populates="company",

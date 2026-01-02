@@ -54,8 +54,6 @@ from app.routers import (
     departments,
     customers,
     daily_reports,
-    facilities,
-    facility_assignments,
     subscriptions,
 )
 
@@ -66,8 +64,6 @@ app.include_router(branches.router)
 app.include_router(departments.router)
 app.include_router(customers.router)
 app.include_router(daily_reports.router)
-app.include_router(facilities.router)
-app.include_router(facility_assignments.router)
 app.include_router(subscriptions.router)
 
 
