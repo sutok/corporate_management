@@ -11,7 +11,7 @@ from app.models.department import Department
 from app.models.branch import Branch
 from app.models.user import User
 from app.schemas.department import DepartmentCreate, DepartmentUpdate, DepartmentResponse
-from app.auth.dependencies import get_current_user
+from app.auth.permissions import require_permission
 
 router = APIRouter(prefix="/api/departments", tags=["departments"])
 
@@ -21,10 +21,14 @@ async def get_departments(
     branch_id: int = None,
     skip: int = 0,
     limit: int = 100,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("department.view")),
     db: AsyncSession = Depends(get_db),
 ):
-    """部署一覧取得（同じ企業のみ）"""
+    """
+    部署一覧取得
+
+    必要な権限: department.view
+    """
     query = select(Department).join(Branch).where(Branch.company_id == current_user.company_id)
 
     if branch_id:
@@ -38,10 +42,14 @@ async def get_departments(
 @router.get("/{department_id}", response_model=DepartmentResponse)
 async def get_department(
     department_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("department.view")),
     db: AsyncSession = Depends(get_db),
 ):
-    """部署詳細取得"""
+    """
+    部署詳細取得
+
+    必要な権限: department.view
+    """
     result = await db.execute(
         select(Department)
         .join(Branch)
@@ -70,16 +78,14 @@ async def get_department(
 @router.post("", response_model=DepartmentResponse, status_code=status.HTTP_201_CREATED)
 async def create_department(
     department: DepartmentCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("department.create")),
     db: AsyncSession = Depends(get_db),
 ):
-    """部署作成（管理者のみ）"""
-    if current_user.role not in ["admin", "manager"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="権限がありません",
-        )
+    """
+    部署作成
 
+    必要な権限: department.create
+    """
     result = await db.execute(select(Branch).where(Branch.id == department.branch_id))
     branch = result.scalar_one_or_none()
 
@@ -106,16 +112,14 @@ async def create_department(
 async def update_department(
     department_id: int,
     department_update: DepartmentUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("department.update")),
     db: AsyncSession = Depends(get_db),
 ):
-    """部署更新（管理者のみ）"""
-    if current_user.role not in ["admin", "manager"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="権限がありません",
-        )
+    """
+    部署更新
 
+    必要な権限: department.update
+    """
     result = await db.execute(select(Department).where(Department.id == department_id))
     department = result.scalar_one_or_none()
 
@@ -146,16 +150,14 @@ async def update_department(
 @router.delete("/{department_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_department(
     department_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("department.delete")),
     db: AsyncSession = Depends(get_db),
 ):
-    """部署削除（管理者のみ）"""
-    if current_user.role not in ["admin", "manager"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="権限がありません",
-        )
+    """
+    部署削除
 
+    必要な権限: department.delete
+    """
     result = await db.execute(select(Department).where(Department.id == department_id))
     department = result.scalar_one_or_none()
 
