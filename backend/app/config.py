@@ -1,7 +1,7 @@
 """
 アプリケーション設定管理
 """
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
 
@@ -29,9 +29,7 @@ class Settings(BaseSettings):
     # Timezone
     TIMEZONE: str = "Asia/Tokyo"
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
     @property
     def cors_origins_list(self) -> list[str]:

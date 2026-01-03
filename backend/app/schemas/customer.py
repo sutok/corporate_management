@@ -3,7 +3,7 @@ Customer Schemas
 """
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class CustomerBase(BaseModel):
@@ -45,5 +45,4 @@ class CustomerResponse(CustomerBase):
     created_at: datetime = Field(..., description="作成日時")
     updated_at: datetime = Field(..., description="更新日時")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

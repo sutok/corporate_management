@@ -2,7 +2,7 @@
 DailyReport Schemas
 """
 from datetime import date, datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DailyReportBase(BaseModel):
@@ -31,5 +31,4 @@ class DailyReportResponse(DailyReportBase):
     created_at: datetime = Field(..., description="作成日時")
     updated_at: datetime = Field(..., description="更新日時")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

@@ -3,7 +3,7 @@ Branch Schemas
 """
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class BranchBase(BaseModel):
@@ -36,5 +36,4 @@ class BranchResponse(BranchBase):
     created_at: datetime = Field(..., description="作成日時")
     updated_at: datetime = Field(..., description="更新日時")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
