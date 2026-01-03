@@ -77,35 +77,27 @@
 
 ### 🔴 高優先度 (セキュリティ & 基盤)
 
-#### 1. 既存ルーターへの権限チェック適用
-**説明**: 現在、subscriptions.py のみ権限チェックが実装されています。他の全ルーターにも適用が必要です。
+#### 1. 既存ルーターへの権限チェック適用 ✅ **完了**
+**説明**: 全ての主要ルーターに権限チェックを実装しました（2026-01-03）
 
 **対象ルーター**:
-- [ ] auth.py - 認証関連（一部のみ必要）
-- [ ] branches.py - 支店管理
-- [ ] companies.py - 企業管理
-- [ ] customers.py - 顧客管理
-- [ ] daily_reports.py - 日報管理
-- [ ] departments.py - 部署管理
-- [ ] facilities.py - 施設管理
-- [ ] facility_assignments.py - 施設所属管理
-- [ ] users.py - ユーザー管理
+- [ ] auth.py - 認証関連（権限チェック不要）
+- [x] branches.py - 支店管理 ✅
+- [x] companies.py - 企業管理 ✅
+- [x] customers.py - 顧客管理 ✅
+- [x] daily_reports.py - 日報管理 ✅（動的スコープ対応）
+- [x] departments.py - 部署管理 ✅
+- [ ] facilities.py - 施設管理（削除済み）
+- [ ] facility_assignments.py - 施設所属管理（削除済み）
+- [x] users.py - ユーザー管理 ✅（自己更新対応）
 
-**実装方法**:
-```python
-from app.auth.permissions import require_permission, require_any_permission
+**実装内容**:
+- Pattern 1（Basic CRUD）: branches.py, departments.py, companies.py
+- Pattern 2（自己操作許可）: users.py, customers.py
+- Pattern 3（動的スコープ）: daily_reports.py（view_all/view_self）
 
-@router.get("/endpoint")
-async def endpoint(
-    current_user: User = Depends(require_permission("resource.action")),
-    ...
-):
-    ...
-```
-
-**参考実装**: `app/routers/subscriptions.py`
-
-**推定工数**: 4-6時間
+**実装日**: 2026-01-03
+**実績工数**: 約3時間
 
 ---
 
