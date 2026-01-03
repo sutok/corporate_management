@@ -3,6 +3,9 @@ corporate_user
 corporate_password
 corporate_db
 
+# .gitallowedファイル自体（コメント内のtest単語を許可）
+.gitallowed
+
 # テスト用メールアドレス（テストコードとドキュメント用）
 test@example.com
 admin@attendance.local
@@ -14,3 +17,6 @@ http://test
 backend/tests/
 tests/test_permissions.py
 tests/test_subscriptions.py
+
+# Makefile内のテストコマンド（開発ワークフロー用）
+Makefile:.*test
