@@ -120,11 +120,17 @@ db-reset: ## Reset database (WARNING: destroys all data)
 	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
 		echo "$(YELLOW)Resetting database...$(NC)"; \
 		docker compose down -v; \
-		docker compose up -d postgres; \
-		sleep 5; \
+		echo "$(BLUE)Starting services...$(NC)"; \
+		docker compose up -d; \
+		echo "$(BLUE)Waiting for services to be ready...$(NC)"; \
+		sleep 10; \
+		echo "$(BLUE)Running migrations...$(NC)"; \
 		docker compose exec backend alembic upgrade head; \
+		echo "$(BLUE)Seeding database...$(NC)"; \
 		docker compose exec backend python scripts/seed_permissions.py; \
 		echo "$(GREEN)Database reset completed!$(NC)"; \
+		echo "Backend: http://localhost:8000"; \
+		echo "Frontend: http://localhost:5173"; \
 	else \
 		echo "$(GREEN)Cancelled.$(NC)"; \
 	fi
