@@ -496,6 +496,7 @@ erDiagram
 
 ## 8. 権限管理システム
 
+@claudedocs/権限管理.md
 
 ## 9. テスト仕様書
 
