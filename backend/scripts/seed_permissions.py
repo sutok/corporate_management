@@ -74,7 +74,9 @@ PERMISSIONS = [
 
     # 企業管理
     {"code": "company.view", "name": "企業情報閲覧", "resource_type": "company", "description": "企業情報を閲覧する権限"},
+    {"code": "company.create", "name": "企業作成", "resource_type": "company", "description": "新規企業を作成する権限（システム管理者専用）"},
     {"code": "company.update", "name": "企業情報更新", "resource_type": "company", "description": "企業情報を更新する権限"},
+    {"code": "company.delete", "name": "企業削除", "resource_type": "company", "description": "企業を削除する権限（システム管理者専用、通常使用しない）"},
 
     # 支店・部署管理
     {"code": "branch.view", "name": "支店閲覧", "resource_type": "branch", "description": "支店情報を閲覧する権限"},

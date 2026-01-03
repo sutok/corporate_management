@@ -41,6 +41,9 @@ async def test_get_departments_list(client: AsyncClient, db_session: AsyncSessio
     db_session.add(user)
     await db_session.commit()
 
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
+
     # ログイン
     login_response = await client.post(
         "/api/auth/login",
@@ -80,6 +83,9 @@ async def test_create_department(client: AsyncClient, db_session: AsyncSession):
     )
     db_session.add(user)
     await db_session.commit()
+
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
 
     # ログイン
     login_response = await client.post(
@@ -133,6 +139,9 @@ async def test_update_department(client: AsyncClient, db_session: AsyncSession):
     db_session.add(user)
     await db_session.commit()
 
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
+
     # ログイン
     login_response = await client.post(
         "/api/auth/login",
@@ -179,6 +188,9 @@ async def test_delete_department(client: AsyncClient, db_session: AsyncSession):
     )
     db_session.add(user)
     await db_session.commit()
+
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
 
     # ログイン
     login_response = await client.post(

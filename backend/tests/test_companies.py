@@ -28,6 +28,9 @@ async def test_get_companies_list(client: AsyncClient, db_session: AsyncSession)
     db_session.add(user)
     await db_session.commit()
 
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
+
     # ログイン
     login_response = await client.post(
         "/api/auth/login",
@@ -64,6 +67,9 @@ async def test_get_company_by_id(client: AsyncClient, db_session: AsyncSession):
     db_session.add(user)
     await db_session.commit()
 
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
+
     # ログイン
     login_response = await client.post(
         "/api/auth/login",
@@ -99,6 +105,9 @@ async def test_create_company(client: AsyncClient, db_session: AsyncSession):
     )
     db_session.add(user)
     await db_session.commit()
+
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
 
     # ログイン
     login_response = await client.post(
@@ -142,6 +151,9 @@ async def test_update_company(client: AsyncClient, db_session: AsyncSession):
     db_session.add(user)
     await db_session.commit()
 
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
+
     # ログイン
     login_response = await client.post(
         "/api/auth/login",
@@ -177,6 +189,9 @@ async def test_delete_company(client: AsyncClient, db_session: AsyncSession):
     )
     db_session.add(user)
     await db_session.commit()
+
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
 
     # ログイン
     login_response = await client.post(
@@ -228,4 +243,5 @@ async def test_create_company_forbidden_for_regular_user(
     )
 
     assert response.status_code == 403
-    assert "権限がありません" in response.json()["detail"]
+    # 権限システムの新しいエラーメッセージ形式
+    assert "権限" in response.json()["detail"]

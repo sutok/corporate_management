@@ -10,7 +10,7 @@ from app.database import get_db
 from app.models.branch import Branch
 from app.models.user import User
 from app.schemas.branch import BranchCreate, BranchUpdate, BranchResponse
-from app.auth.dependencies import get_current_user
+from app.auth.permissions import require_permission
 
 router = APIRouter(prefix="/api/branches", tags=["branches"])
 
@@ -19,10 +19,14 @@ router = APIRouter(prefix="/api/branches", tags=["branches"])
 async def get_branches(
     skip: int = 0,
     limit: int = 100,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("branch.view")),
     db: AsyncSession = Depends(get_db),
 ):
-    """支店一覧取得（同じ企業のみ）"""
+    """
+    支店一覧取得
+
+    必要な権限: branch.view
+    """
     result = await db.execute(
         select(Branch)
         .where(Branch.company_id == current_user.company_id)
@@ -36,10 +40,14 @@ async def get_branches(
 @router.get("/{branch_id}", response_model=BranchResponse)
 async def get_branch(
     branch_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("branch.view")),
     db: AsyncSession = Depends(get_db),
 ):
-    """支店詳細取得"""
+    """
+    支店詳細取得
+
+    必要な権限: branch.view
+    """
     result = await db.execute(select(Branch).where(Branch.id == branch_id))
     branch = result.scalar_one_or_none()
 
@@ -61,16 +69,14 @@ async def get_branch(
 @router.post("", response_model=BranchResponse, status_code=status.HTTP_201_CREATED)
 async def create_branch(
     branch: BranchCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("branch.create")),
     db: AsyncSession = Depends(get_db),
 ):
-    """支店作成（管理者のみ）"""
-    if current_user.role not in ["admin", "manager"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="権限がありません",
-        )
+    """
+    支店作成
 
+    必要な権限: branch.create
+    """
     if branch.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -88,16 +94,14 @@ async def create_branch(
 async def update_branch(
     branch_id: int,
     branch_update: BranchUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("branch.update")),
     db: AsyncSession = Depends(get_db),
 ):
-    """支店更新（管理者のみ）"""
-    if current_user.role not in ["admin", "manager"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="権限がありません",
-        )
+    """
+    支店更新
 
+    必要な権限: branch.update
+    """
     result = await db.execute(select(Branch).where(Branch.id == branch_id))
     branch = result.scalar_one_or_none()
 
@@ -125,16 +129,14 @@ async def update_branch(
 @router.delete("/{branch_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_branch(
     branch_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("branch.delete")),
     db: AsyncSession = Depends(get_db),
 ):
-    """支店削除（管理者のみ）"""
-    if current_user.role not in ["admin", "manager"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="権限がありません",
-        )
+    """
+    支店削除
 
+    必要な権限: branch.delete
+    """
     result = await db.execute(select(Branch).where(Branch.id == branch_id))
     branch = result.scalar_one_or_none()
 

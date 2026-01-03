@@ -34,6 +34,9 @@ async def test_get_users_list(client: AsyncClient, db_session: AsyncSession):
     db_session.add_all([user1, user2])
     await db_session.commit()
 
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user1.id)
+
     # ログイン
     login_response = await client.post(
         "/api/auth/login",
@@ -68,6 +71,9 @@ async def test_create_user(client: AsyncClient, db_session: AsyncSession):
     )
     db_session.add(admin)
     await db_session.commit()
+
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(admin.id)
 
     # ログイン
     login_response = await client.post(
@@ -112,6 +118,9 @@ async def test_update_user(client: AsyncClient, db_session: AsyncSession):
     db_session.add(user)
     await db_session.commit()
 
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
+
     # ログイン
     login_response = await client.post(
         "/api/auth/login",
@@ -155,6 +164,9 @@ async def test_delete_user(client: AsyncClient, db_session: AsyncSession):
     db_session.add_all([admin, target_user])
     await db_session.commit()
 
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(admin.id)
+
     # ログイン
     login_response = await client.post(
         "/api/auth/login",
@@ -196,6 +208,9 @@ async def test_create_user_with_duplicate_email(
     )
     db_session.add_all([existing_user, admin])
     await db_session.commit()
+
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(admin.id)
 
     # ログイン
     login_response = await client.post(
