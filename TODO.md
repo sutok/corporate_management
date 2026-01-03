@@ -1,6 +1,6 @@
 # プロジェクト TODO リスト
 
-**最終更新**: 2026-01-01 (Service Subscription History機能実装完了)
+**最終更新**: 2026-01-03 (Linux風権限管理システム完全実装完了)
 **プロジェクト**: 営業日報システム (FastAPI + React)
 
 ---
@@ -8,8 +8,11 @@
 ## 📊 進捗サマリー
 
 - **バックエンドAPI**: 11/11 ルーター実装済み ✅
-- **バックエンドテスト**: 11/11 テストファイル実装済み ✅
-- **Permission & Role システム**: 実装完了 ✅
+- **Linux風権限管理システム**: 完全実装完了 ✅
+  - データベース（5テーブル）✅
+  - モデル（5ファイル）✅
+  - 権限チェック機能 ✅
+  - 初期データ（37権限、4グループ）✅
 - **フロントエンド**: 基本画面実装完了 ✅
 - **権限統合**: 一部のみ（1/11 ルーター） ⚠️
 
@@ -25,23 +28,34 @@
 - [x] ユーザー管理API (users.py)
 - [x] 顧客管理API (customers.py)
 - [x] 日報管理API (daily_reports.py)
-- [x] 施設管理API (facilities.py)
-- [x] 施設所属管理API (facility_assignments.py)
+- [x] 施設管理API (facilities.py) - 後に削除
+- [x] 施設所属管理API (facility_assignments.py) - 後に削除
 - [x] サービス契約管理API (subscriptions.py)
-- [x] Permission & Role 管理システム実装
-- [x] 初期データ投入スクリプト (seed_permissions.py)
+- [x] **Linux風権限管理システム完全実装** (2026-01-03)
+  - [x] データベース設計（5テーブル）
+  - [x] マイグレーション作成・適用
+  - [x] SQLAlchemyモデル（5ファイル）
+  - [x] 権限チェック機能 (app/auth/permissions.py)
+  - [x] 使用例ルーター (app/routers/permissions_example.py)
+  - [x] 初期データ投入スクリプト (scripts/seed_permissions.py)
+  - [x] 設計ドキュメント (claudedocs/権限管理.md)
 
 ### テスト
-- [x] 全APIルーターのテスト実装 (11ファイル)
-- [x] Permission管理テスト (test_permissions.py - 7テストケース)
+- [x] 全APIルーターのテスト実装 (9ファイル - 施設関連削除後)
 - [x] Subscriptions APIテスト (test_subscriptions.py - 8テストケース)
 - [x] Service Subscription History テスト (4テストケース追加)
 - [x] テスト実行確認 (全テスト成功)
+- [ ] 権限管理システムのテスト（新システム用）- 未実装
 
 ### データベース
 - [x] スキーマ設計とマイグレーション
-- [x] Permission & Role テーブル実装
-- [x] 権限・ロール初期データ投入
+- [x] **Linux風権限管理システムテーブル実装** (2026-01-03)
+  - [x] roles - 個別権限一覧（37権限）
+  - [x] group_roles - グループ一覧（4システムグループ）
+  - [x] group_role_permissions - グループ⇔権限の関連（72件）
+  - [x] user_role_assignments - ユーザー⇔個別権限の割り当て
+  - [x] user_group_assignments - ユーザー⇔グループの所属
+- [x] 権限・グループ初期データ投入（37権限、4グループ）
 
 ### フロントエンド
 - [x] Vite + React + TypeScript プロジェクト作成
@@ -294,7 +308,11 @@ async def endpoint(
 ## 📌 メモ
 
 ### 技術的な注意事項
-- Permission & Role システムの権限コード一覧は `backend/scripts/seed_permissions.py` を参照
+- **Linux風権限管理システム** (2026-01-03実装)
+  - 権限コード一覧: `backend/scripts/seed_permissions.py` 参照
+  - 権限チェック関数: `app/auth/permissions.py` 参照
+  - 使用例: `app/routers/permissions_example.py` 参照
+  - 設計仕様: `claudedocs/権限管理.md` 参照
 - 既存の権限チェック実装例は `app/routers/subscriptions.py` を参照
 - テストデータ作成のヘルパー関数は `tests/test_subscriptions.py:create_test_data()` を参照
 
