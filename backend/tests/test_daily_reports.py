@@ -30,11 +30,15 @@ async def test_get_daily_reports_list(client: AsyncClient, db_session: AsyncSess
     await db_session.flush()
 
     report = DailyReport(
+        company_id=company.id,
         user_id=user.id,
         report_date=date.today(),
     )
     db_session.add(report)
     await db_session.commit()
+
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
 
     # ログイン
     login_response = await client.post(
@@ -70,6 +74,9 @@ async def test_create_daily_report(client: AsyncClient, db_session: AsyncSession
     )
     db_session.add(user)
     await db_session.commit()
+
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
 
     # ログイン
     login_response = await client.post(
@@ -111,11 +118,15 @@ async def test_update_daily_report(client: AsyncClient, db_session: AsyncSession
     await db_session.flush()
 
     report = DailyReport(
+        company_id=company.id,
         user_id=user.id,
         report_date=date.today(),
     )
     db_session.add(report)
     await db_session.commit()
+
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
 
     # ログイン
     login_response = await client.post(
@@ -157,11 +168,15 @@ async def test_delete_daily_report(client: AsyncClient, db_session: AsyncSession
     await db_session.flush()
 
     report = DailyReport(
+        company_id=company.id,
         user_id=user.id,
         report_date=date.today(),
     )
     db_session.add(report)
     await db_session.commit()
+
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
 
     # ログイン
     login_response = await client.post(
@@ -198,9 +213,12 @@ async def test_get_daily_reports_with_date_filter(
     db_session.add(user)
     await db_session.flush()
 
-    today_report = DailyReport(user_id=user.id, report_date=date.today())
+    today_report = DailyReport(company_id=company.id, user_id=user.id, report_date=date.today())
     db_session.add(today_report)
     await db_session.commit()
+
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
 
     # ログイン
     login_response = await client.post(
