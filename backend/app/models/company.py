@@ -30,12 +30,6 @@ class Company(Base):
     users = relationship("User", back_populates="company", cascade="all, delete-orphan")
     customers = relationship("Customer", back_populates="company", cascade="all, delete-orphan")
     daily_reports = relationship("DailyReport", back_populates="company", cascade="all, delete-orphan")
-    facilities = relationship("Facility", back_populates="company", cascade="all, delete-orphan")
-    facility_assignments = relationship(
-        "FacilityAssignment",
-        back_populates="company",
-        cascade="all, delete-orphan",
-    )
     service_subscriptions = relationship(
         "CompanyServiceSubscription",
         back_populates="company",
@@ -43,6 +37,12 @@ class Company(Base):
     )
     subscription_history = relationship(
         "ServiceSubscriptionHistory",
+        back_populates="company",
+        cascade="all, delete-orphan",
+    )
+    # 権限管理システム
+    group_roles = relationship(
+        "GroupRole",
         back_populates="company",
         cascade="all, delete-orphan",
     )

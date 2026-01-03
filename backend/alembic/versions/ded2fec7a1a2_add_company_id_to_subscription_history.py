@@ -1,7 +1,7 @@
 """add_company_id_to_subscription_history
 
 Revision ID: ded2fec7a1a2
-Revises: 90bfc49cc6c4
+Revises: b81e7a91fd55
 Create Date: 2026-01-01 21:33:49.459153
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'ded2fec7a1a2'
-down_revision: Union[str, None] = '90bfc49cc6c4'
+down_revision: Union[str, None] = 'b81e7a91fd55'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -1,389 +1,262 @@
+#!/usr/bin/env python3
 """
-権限とシステムロールの初期データ投入スクリプト
+Permission System Initial Data Seeder
+権限管理システム初期データ投入スクリプト
+
+このスクリプトは以下のデータを投入します:
+1. 基本的な権限（roles）
+2. システムグループ（group_roles）
+3. グループと権限の関連付け（group_role_permissions）
 """
 import asyncio
 import sys
 from pathlib import Path
 
 # プロジェクトルートをパスに追加
-sys.path.append(str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import select
+from datetime import datetime
 
-from app.config import get_settings
-from app.models.permission import Permission
 from app.models.role import Role
-from app.models.role_permission import RolePermission
+from app.models.group_role import GroupRole
+from app.models.group_role_permission import GroupRolePermission
+from app.config import get_settings
 
+
+# 設定を取得
 settings = get_settings()
 
+# データベースエンジンを作成
+engine = create_async_engine(
+    settings.DATABASE_URL_ASYNC,
+    echo=False,
+)
 
+async_session = sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
+
+
+# ========================================
 # 権限定義
+# ========================================
+
 PERMISSIONS = [
-    # Service 管理
-    {
-        "code": "service.view",
-        "name": "サービス閲覧",
-        "description": "サービス情報を閲覧する",
-        "resource_type": "service",
-    },
-    {
-        "code": "service.subscribe",
-        "name": "サービス契約",
-        "description": "サービスを契約する",
-        "resource_type": "service",
-    },
-    {
-        "code": "service.unsubscribe",
-        "name": "サービス解約",
-        "description": "サービスを解約する",
-        "resource_type": "service",
-    },
-    {
-        "code": "service.manage",
-        "name": "サービス管理",
-        "description": "サービス設定を管理する",
-        "resource_type": "service",
-    },
-    # Subscription 管理
-    {
-        "code": "subscription.view",
-        "name": "契約状況閲覧",
-        "description": "自社の契約状況を閲覧する",
-        "resource_type": "subscription",
-    },
-    {
-        "code": "subscription.history",
-        "name": "契約履歴閲覧",
-        "description": "契約履歴を閲覧する",
-        "resource_type": "subscription",
-    },
-    # User 管理
-    {
-        "code": "user.view",
-        "name": "ユーザー閲覧",
-        "description": "ユーザー情報を閲覧する",
-        "resource_type": "user",
-    },
-    {
-        "code": "user.create",
-        "name": "ユーザー作成",
-        "description": "新しいユーザーを作成する",
-        "resource_type": "user",
-    },
-    {
-        "code": "user.update",
-        "name": "ユーザー更新",
-        "description": "ユーザー情報を更新する",
-        "resource_type": "user",
-    },
-    {
-        "code": "user.delete",
-        "name": "ユーザー削除",
-        "description": "ユーザーを削除する",
-        "resource_type": "user",
-    },
-    {
-        "code": "user.view_self",
-        "name": "自分の情報閲覧",
-        "description": "自分のユーザー情報を閲覧する",
-        "resource_type": "user",
-    },
-    # Company 管理
-    {
-        "code": "company.view",
-        "name": "企業情報閲覧",
-        "description": "企業情報を閲覧する",
-        "resource_type": "company",
-    },
-    {
-        "code": "company.update",
-        "name": "企業情報更新",
-        "description": "企業情報を更新する",
-        "resource_type": "company",
-    },
-    {
-        "code": "company.delete",
-        "name": "企業削除",
-        "description": "企業を削除する",
-        "resource_type": "company",
-    },
-    # Facility 管理
-    {
-        "code": "facility.view",
-        "name": "施設閲覧",
-        "description": "施設情報を閲覧する",
-        "resource_type": "facility",
-    },
-    {
-        "code": "facility.create",
-        "name": "施設作成",
-        "description": "新しい施設を作成する",
-        "resource_type": "facility",
-    },
-    {
-        "code": "facility.update",
-        "name": "施設更新",
-        "description": "施設情報を更新する",
-        "resource_type": "facility",
-    },
-    {
-        "code": "facility.delete",
-        "name": "施設削除",
-        "description": "施設を削除する",
-        "resource_type": "facility",
-    },
-    {
-        "code": "facility_assignment.manage",
-        "name": "施設所属管理",
-        "description": "ユーザーの施設所属を管理する",
-        "resource_type": "facility",
-    },
-    # Report 管理
-    {
-        "code": "report.view",
-        "name": "レポート閲覧",
-        "description": "レポートを閲覧する",
-        "resource_type": "report",
-    },
-    {
-        "code": "report.view_all",
-        "name": "全レポート閲覧",
-        "description": "全てのレポートを閲覧する",
-        "resource_type": "report",
-    },
-    {
-        "code": "report.create",
-        "name": "レポート作成",
-        "description": "新しいレポートを作成する",
-        "resource_type": "report",
-    },
-    {
-        "code": "report.update_own",
-        "name": "自分のレポート更新",
-        "description": "自分のレポートを更新する",
-        "resource_type": "report",
-    },
-    {
-        "code": "report.approve",
-        "name": "レポート承認",
-        "description": "レポートを承認する",
-        "resource_type": "report",
-    },
-    # Role 管理
-    {
-        "code": "role.view",
-        "name": "ロール閲覧",
-        "description": "ロール情報を閲覧する",
-        "resource_type": "role",
-    },
-    {
-        "code": "role.create",
-        "name": "ロール作成",
-        "description": "新しいロールを作成する",
-        "resource_type": "role",
-    },
-    {
-        "code": "role.update",
-        "name": "ロール更新",
-        "description": "ロール情報を更新する",
-        "resource_type": "role",
-    },
-    {
-        "code": "role.delete",
-        "name": "ロール削除",
-        "description": "ロールを削除する",
-        "resource_type": "role",
-    },
-    {
-        "code": "role.assign",
-        "name": "ロール割り当て",
-        "description": "ユーザーにロールを割り当てる",
-        "resource_type": "role",
-    },
+    # ユーザー管理
+    {"code": "user.view", "name": "ユーザー閲覧", "resource_type": "user", "description": "ユーザー情報を閲覧する権限"},
+    {"code": "user.view_self", "name": "自分の情報閲覧", "resource_type": "user", "description": "自分のユーザー情報を閲覧する権限"},
+    {"code": "user.create", "name": "ユーザー作成", "resource_type": "user", "description": "新しいユーザーを作成する権限"},
+    {"code": "user.update", "name": "ユーザー更新", "resource_type": "user", "description": "ユーザー情報を更新する権限"},
+    {"code": "user.update_self", "name": "自分の情報更新", "resource_type": "user", "description": "自分のユーザー情報を更新する権限"},
+    {"code": "user.delete", "name": "ユーザー削除", "resource_type": "user", "description": "ユーザーを削除する権限"},
+
+    # 日報管理
+    {"code": "report.view", "name": "日報閲覧", "resource_type": "report", "description": "日報を閲覧する権限"},
+    {"code": "report.view_all", "name": "全日報閲覧", "resource_type": "report", "description": "全ユーザーの日報を閲覧する権限"},
+    {"code": "report.view_self", "name": "自分の日報閲覧", "resource_type": "report", "description": "自分の日報を閲覧する権限"},
+    {"code": "report.create", "name": "日報作成", "resource_type": "report", "description": "日報を作成する権限"},
+    {"code": "report.update", "name": "日報更新", "resource_type": "report", "description": "日報を更新する権限"},
+    {"code": "report.update_self", "name": "自分の日報更新", "resource_type": "report", "description": "自分の日報を更新する権限"},
+    {"code": "report.delete", "name": "日報削除", "resource_type": "report", "description": "日報を削除する権限"},
+    {"code": "report.delete_self", "name": "自分の日報削除", "resource_type": "report", "description": "自分の日報を削除する権限"},
+    {"code": "report.approve", "name": "日報承認", "resource_type": "report", "description": "日報を承認する権限"},
+    {"code": "report.comment", "name": "日報コメント", "resource_type": "report", "description": "日報にコメントする権限"},
+
+    # 顧客管理
+    {"code": "customer.view", "name": "顧客閲覧", "resource_type": "customer", "description": "顧客情報を閲覧する権限"},
+    {"code": "customer.view_assigned", "name": "担当顧客閲覧", "resource_type": "customer", "description": "自分が担当する顧客を閲覧する権限"},
+    {"code": "customer.create", "name": "顧客作成", "resource_type": "customer", "description": "新しい顧客を作成する権限"},
+    {"code": "customer.update", "name": "顧客更新", "resource_type": "customer", "description": "顧客情報を更新する権限"},
+    {"code": "customer.delete", "name": "顧客削除", "resource_type": "customer", "description": "顧客を削除する権限"},
+
+    # 企業管理
+    {"code": "company.view", "name": "企業情報閲覧", "resource_type": "company", "description": "企業情報を閲覧する権限"},
+    {"code": "company.update", "name": "企業情報更新", "resource_type": "company", "description": "企業情報を更新する権限"},
+
+    # 支店・部署管理
+    {"code": "branch.view", "name": "支店閲覧", "resource_type": "branch", "description": "支店情報を閲覧する権限"},
+    {"code": "branch.create", "name": "支店作成", "resource_type": "branch", "description": "新しい支店を作成する権限"},
+    {"code": "branch.update", "name": "支店更新", "resource_type": "branch", "description": "支店情報を更新する権限"},
+    {"code": "branch.delete", "name": "支店削除", "resource_type": "branch", "description": "支店を削除する権限"},
+    {"code": "department.view", "name": "部署閲覧", "resource_type": "department", "description": "部署情報を閲覧する権限"},
+    {"code": "department.create", "name": "部署作成", "resource_type": "department", "description": "新しい部署を作成する権限"},
+    {"code": "department.update", "name": "部署更新", "resource_type": "department", "description": "部署情報を更新する権限"},
+    {"code": "department.delete", "name": "部署削除", "resource_type": "department", "description": "部署を削除する権限"},
+
+    # 権限管理
+    {"code": "permission.view", "name": "権限閲覧", "resource_type": "permission", "description": "権限情報を閲覧する権限"},
+    {"code": "permission.assign", "name": "権限付与", "resource_type": "permission", "description": "ユーザーに権限を付与する権限"},
+    {"code": "permission.revoke", "name": "権限剥奪", "resource_type": "permission", "description": "ユーザーから権限を剥奪する権限"},
+    {"code": "permission.manage_groups", "name": "グループ管理", "resource_type": "permission", "description": "権限グループを管理する権限"},
+
+    # システム管理
+    {"code": "admin.access", "name": "管理画面アクセス", "resource_type": "admin", "description": "管理画面にアクセスする権限"},
+    {"code": "admin.system_settings", "name": "システム設定", "resource_type": "admin", "description": "システム設定を変更する権限"},
 ]
 
 
-# システムロール定義
-SYSTEM_ROLES = [
+# ========================================
+# システムグループ定義
+# ========================================
+
+SYSTEM_GROUPS = [
     {
-        "code": "super_admin",
-        "name": "システム管理者",
-        "description": "システム全体の管理者。すべての権限を持つ",
-        "permissions": "*",  # すべての権限
+        "code": "admin",
+        "name": "管理者",
+        "description": "システム管理者。全ての権限を持つ",
+        "permissions": [perm["code"] for perm in PERMISSIONS],  # 全権限
     },
     {
-        "code": "company_admin",
-        "name": "企業管理者",
-        "description": "企業の管理者。ユーザー管理、施設管理、サービス契約を行う",
+        "code": "manager",
+        "name": "マネージャー",
+        "description": "部門マネージャー。チームメンバーの日報確認と承認が可能",
         "permissions": [
-            "user.view",
-            "user.create",
-            "user.update",
-            "user.delete",
+            "user.view", "user.view_self", "user.update_self",
+            "report.view_all", "report.view_self", "report.create", "report.update_self",
+            "report.delete_self", "report.approve", "report.comment",
+            "customer.view", "customer.view_assigned", "customer.create", "customer.update",
             "company.view",
-            "company.update",
-            "facility.view",
-            "facility.create",
-            "facility.update",
-            "facility.delete",
-            "facility_assignment.manage",
-            "service.view",
-            "service.subscribe",
-            "service.unsubscribe",
-            "subscription.view",
-            "subscription.history",
-            "report.view_all",
-            "role.view",
-            "role.assign",
+            "branch.view", "department.view",
         ],
     },
     {
-        "code": "subscription_manager",
-        "name": "サービス管理者",
-        "description": "サービス契約の管理を行う",
+        "code": "staff",
+        "name": "一般スタッフ",
+        "description": "一般的な営業スタッフ。自分の日報管理と担当顧客管理が可能",
         "permissions": [
-            "service.view",
-            "service.subscribe",
-            "service.unsubscribe",
-            "service.manage",
-            "subscription.view",
-            "subscription.history",
+            "user.view_self", "user.update_self",
+            "report.view_self", "report.create", "report.update_self", "report.delete_self",
+            "customer.view_assigned", "customer.create", "customer.update",
+            "company.view",
+            "branch.view", "department.view",
         ],
     },
     {
-        "code": "facility_manager",
-        "name": "施設管理者",
-        "description": "施設と施設所属の管理を行う",
+        "code": "viewer",
+        "name": "閲覧者",
+        "description": "読み取り専用ユーザー。情報の閲覧のみ可能",
         "permissions": [
-            "facility.view",
-            "facility.create",
-            "facility.update",
-            "facility.delete",
-            "facility_assignment.manage",
-            "user.view",
-        ],
-    },
-    {
-        "code": "report_viewer",
-        "name": "レポート閲覧者",
-        "description": "レポートの閲覧権限を持つ",
-        "permissions": [
-            "report.view",
-            "subscription.view",
-        ],
-    },
-    {
-        "code": "basic_user",
-        "name": "一般ユーザー",
-        "description": "基本的なユーザー権限",
-        "permissions": [
-            "report.create",
-            "report.update_own",
             "user.view_self",
-            "report.view",
+            "report.view_self",
+            "customer.view_assigned",
+            "company.view",
+            "branch.view", "department.view",
         ],
     },
 ]
 
 
-async def seed_permissions_and_roles():
-    """権限とロールの初期データを投入"""
-    # データベース接続
-    engine = create_async_engine(settings.DATABASE_URL_ASYNC, echo=True)
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
+async def seed_permissions():
+    """権限データを投入"""
     async with async_session() as session:
-        try:
-            # 1. 権限を作成
-            print("\n=== 権限の作成 ===")
-            permission_map = {}
-            for perm_data in PERMISSIONS:
-                # 既存チェック
-                result = await session.execute(
-                    select(Permission).where(Permission.code == perm_data["code"])
-                )
-                existing = result.scalar_one_or_none()
+        print("=" * 60)
+        print("権限データ投入開始")
+        print("=" * 60)
 
-                if existing:
-                    print(f"✓ 既存: {perm_data['code']}")
-                    permission_map[perm_data["code"]] = existing
-                else:
-                    permission = Permission(**perm_data)
-                    session.add(permission)
-                    await session.flush()
-                    permission_map[perm_data["code"]] = permission
-                    print(f"+ 作成: {perm_data['code']}")
+        # 既存の権限を確認
+        result = await session.execute(select(Role))
+        existing_roles = {role.code: role for role in result.scalars().all()}
 
-            await session.commit()
-            print(f"\n権限作成完了: {len(permission_map)} 件")
+        created_count = 0
+        skipped_count = 0
 
-            # 2. システムロールを作成
-            print("\n=== システムロールの作成 ===")
-            for role_data in SYSTEM_ROLES:
-                # 既存チェック
-                result = await session.execute(
-                    select(Role).where(
-                        Role.code == role_data["code"], Role.company_id.is_(None)
+        for perm_data in PERMISSIONS:
+            if perm_data["code"] in existing_roles:
+                print(f"⏭  スキップ: {perm_data['code']} （既に存在）")
+                skipped_count += 1
+                continue
+
+            role = Role(**perm_data)
+            session.add(role)
+            print(f"✓ 追加: {perm_data['code']} - {perm_data['name']}")
+            created_count += 1
+
+        await session.commit()
+
+        print(f"\n権限データ投入完了: 追加 {created_count}件, スキップ {skipped_count}件")
+        print("=" * 60)
+
+
+async def seed_system_groups():
+    """システムグループデータを投入"""
+    async with async_session() as session:
+        print("\n" + "=" * 60)
+        print("システムグループデータ投入開始")
+        print("=" * 60)
+
+        # 既存のグループを確認
+        result = await session.execute(select(GroupRole).where(GroupRole.is_system == True))
+        existing_groups = {group.code: group for group in result.scalars().all()}
+
+        # 全権限を取得（グループとの関連付けに使用）
+        result = await session.execute(select(Role))
+        all_roles = {role.code: role for role in result.scalars().all()}
+
+        created_count = 0
+        skipped_count = 0
+
+        for group_data in SYSTEM_GROUPS:
+            if group_data["code"] in existing_groups:
+                print(f"⏭  スキップ: {group_data['code']} （既に存在）")
+                skipped_count += 1
+                continue
+
+            # グループを作成
+            group = GroupRole(
+                code=group_data["code"],
+                name=group_data["name"],
+                description=group_data["description"],
+                company_id=None,  # システムグループ
+                is_system=True,
+            )
+            session.add(group)
+            await session.flush()  # IDを取得するためにflush
+
+            # グループに権限を関連付け
+            permission_count = 0
+            for perm_code in group_data["permissions"]:
+                if perm_code in all_roles:
+                    group_perm = GroupRolePermission(
+                        group_role_id=group.id,
+                        role_id=all_roles[perm_code].id,
                     )
-                )
-                existing_role = result.scalar_one_or_none()
+                    session.add(group_perm)
+                    permission_count += 1
 
-                if existing_role:
-                    print(f"✓ 既存: {role_data['code']}")
-                    role = existing_role
-                else:
-                    role = Role(
-                        company_id=None,  # システムロール
-                        code=role_data["code"],
-                        name=role_data["name"],
-                        description=role_data["description"],
-                        is_system=True,
-                    )
-                    session.add(role)
-                    await session.flush()
-                    print(f"+ 作成: {role_data['code']}")
+            print(f"✓ 追加: {group_data['code']} - {group_data['name']} （{permission_count}個の権限）")
+            created_count += 1
 
-                # 権限を割り当て
-                if role_data["permissions"] == "*":
-                    # すべての権限を割り当て
-                    perms_to_assign = list(permission_map.values())
-                else:
-                    # 指定された権限のみ
-                    perms_to_assign = [
-                        permission_map[code] for code in role_data["permissions"]
-                    ]
+        await session.commit()
 
-                # 既存の権限割り当てをチェック
-                for perm in perms_to_assign:
-                    result = await session.execute(
-                        select(RolePermission).where(
-                            RolePermission.role_id == role.id,
-                            RolePermission.permission_id == perm.id,
-                        )
-                    )
-                    existing_rp = result.scalar_one_or_none()
+        print(f"\nシステムグループデータ投入完了: 追加 {created_count}件, スキップ {skipped_count}件")
+        print("=" * 60)
 
-                    if not existing_rp:
-                        role_perm = RolePermission(role_id=role.id, permission_id=perm.id)
-                        session.add(role_perm)
 
-                print(f"  → 権限割り当て: {len(perms_to_assign)} 件")
+async def main():
+    """メイン処理"""
+    try:
+        print("\n🚀 権限管理システム初期データ投入スクリプト")
+        print(f"データベース: {settings.DATABASE_URL_ASYNC.split('@')[-1]}\n")
 
-            await session.commit()
-            print(f"\nシステムロール作成完了: {len(SYSTEM_ROLES)} 件")
+        # 1. 権限データを投入
+        await seed_permissions()
 
-            print("\n✅ 初期データ投入完了！")
+        # 2. システムグループデータを投入
+        await seed_system_groups()
 
-        except Exception as e:
-            await session.rollback()
-            print(f"\n❌ エラー: {e}")
-            raise
-        finally:
-            await engine.dispose()
+        print("\n✅ 全ての初期データ投入が完了しました！\n")
+
+    except Exception as e:
+        print(f"\n❌ エラーが発生しました: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+    finally:
+        await engine.dispose()
 
 
 if __name__ == "__main__":
-    asyncio.run(seed_permissions_and_roles())
+    asyncio.run(main())

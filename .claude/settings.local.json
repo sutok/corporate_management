@@ -67,7 +67,14 @@
       "Bash(DATABASE_URL=\"postgresql://corporate_user:corporate_password@localhost:5432/corporate_db\" DATABASE_URL_ASYNC=\"postgresql+asyncpg://corporate_user:corporate_password@localhost:5432/corporate_db\" SECRET_KEY=\"your-secret-key-change-this-in-production\" .venv/bin/pytest:*)",
       "Bash(DATABASE_URL=\"postgresql://corporate_user:corporate_password@localhost:5432/corporate_db\" .venv/bin/alembic upgrade:*)",
       "Bash(DATABASE_URL=\"postgresql://corporate_user:corporate_password@localhost:5432/corporate_db\" .venv/bin/alembic current:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5432/corporate_management_db\" .venv/bin/alembic current:*)",
+      "Bash(PGPASSWORD=postgres psql:*)",
+      "Bash(DATABASE_URL_ASYNC=\"postgresql+asyncpg://postgres:postgres@localhost:5432/corporate_management_db\" .venv/bin/python:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5432/corporate_management_db\" .venv/bin/alembic upgrade:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5432/corporate_management_db\" DATABASE_URL_ASYNC=\"postgresql+asyncpg://postgres:postgres@localhost:5432/corporate_management_db\" SECRET_KEY=\"your-secret-key-change-this-in-production\" .venv/bin/pytest:*)",
+      "Bash(git reset:*)"
     ]
   }
 }

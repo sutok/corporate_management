@@ -39,11 +39,6 @@ class User(Base):
     daily_reports = relationship("DailyReport", back_populates="user", cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="commenter", cascade="all, delete-orphan")
     customers = relationship("Customer", back_populates="assigned_user")
-    facility_assignments = relationship(
-        "FacilityAssignment",
-        back_populates="user",
-        cascade="all, delete-orphan",
-    )
     branch_assignments = relationship(
         "UserBranchAssignment",
         back_populates="user",
@@ -58,9 +53,16 @@ class User(Base):
         "ServiceSubscriptionHistory",
         back_populates="changed_by_user",
     )
-    user_roles = relationship(
-        "UserRole",
-        foreign_keys="UserRole.user_id",
+    # 権限管理システム
+    user_role_assignments = relationship(
+        "UserRoleAssignment",
+        foreign_keys="UserRoleAssignment.user_id",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    user_group_assignments = relationship(
+        "UserGroupAssignment",
+        foreign_keys="UserGroupAssignment.user_id",
         back_populates="user",
         cascade="all, delete-orphan",
     )
