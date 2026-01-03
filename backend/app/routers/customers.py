@@ -10,7 +10,7 @@ from app.database import get_db
 from app.models.customer import Customer
 from app.models.user import User
 from app.schemas.customer import CustomerCreate, CustomerUpdate, CustomerResponse
-from app.auth.dependencies import get_current_user
+from app.auth.permissions import require_permission
 
 router = APIRouter(prefix="/api/customers", tags=["customers"])
 
@@ -19,10 +19,15 @@ router = APIRouter(prefix="/api/customers", tags=["customers"])
 async def get_customers(
     skip: int = 0,
     limit: int = 100,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("customer.view")),
     db: AsyncSession = Depends(get_db),
 ):
-    """顧客一覧取得（同じ企業のみ）"""
+    """
+    顧客一覧取得
+
+    必要な権限: customer.view
+    注意: 将来的にcustomer.view_assigned権限で担当顧客のみ表示する機能を追加予定
+    """
     result = await db.execute(
         select(Customer)
         .where(Customer.company_id == current_user.company_id)
@@ -36,10 +41,14 @@ async def get_customers(
 @router.get("/{customer_id}", response_model=CustomerResponse)
 async def get_customer(
     customer_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("customer.view")),
     db: AsyncSession = Depends(get_db),
 ):
-    """顧客詳細取得"""
+    """
+    顧客詳細取得
+
+    必要な権限: customer.view
+    """
     result = await db.execute(select(Customer).where(Customer.id == customer_id))
     customer = result.scalar_one_or_none()
 
@@ -61,10 +70,14 @@ async def get_customer(
 @router.post("", response_model=CustomerResponse, status_code=status.HTTP_201_CREATED)
 async def create_customer(
     customer: CustomerCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("customer.create")),
     db: AsyncSession = Depends(get_db),
 ):
-    """顧客作成"""
+    """
+    顧客作成
+
+    必要な権限: customer.create
+    """
     if customer.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -94,10 +107,14 @@ async def create_customer(
 async def update_customer(
     customer_id: int,
     customer_update: CustomerUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("customer.update")),
     db: AsyncSession = Depends(get_db),
 ):
-    """顧客更新"""
+    """
+    顧客更新
+
+    必要な権限: customer.update
+    """
     result = await db.execute(select(Customer).where(Customer.id == customer_id))
     customer = result.scalar_one_or_none()
 
@@ -138,10 +155,14 @@ async def update_customer(
 @router.delete("/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_customer(
     customer_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("customer.delete")),
     db: AsyncSession = Depends(get_db),
 ):
-    """顧客削除"""
+    """
+    顧客削除
+
+    必要な権限: customer.delete
+    """
     result = await db.execute(select(Customer).where(Customer.id == customer_id))
     customer = result.scalar_one_or_none()
 
