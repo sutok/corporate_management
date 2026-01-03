@@ -9,10 +9,10 @@ from app.database import Base
 
 
 class Role(Base):
-    """個別権限モデル（どんな権限があるか）"""
+    """個別権限モデル"""
 
     __tablename__ = "roles"
-    __table_args__ = {"comment": "個別権限一覧（どんな権限があるか）"}
+    __table_args__ = {"comment": "個別権限一覧"}
 
     id = Column(Integer, primary_key=True, index=True, comment="権限ID")
     code = Column(String(100), nullable=False, unique=True, comment="権限コード（例: user.create）")

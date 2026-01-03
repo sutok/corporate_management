@@ -9,10 +9,10 @@ from app.database import Base
 
 
 class GroupRole(Base):
-    """グループモデル（どんなグループがあるか）"""
+    """グループモデル"""
 
     __tablename__ = "group_roles"
-    __table_args__ = {"comment": "グループ一覧（どんなグループがあるか）"}
+    __table_args__ = {"comment": "グループ一覧"}
 
     id = Column(Integer, primary_key=True, index=True, comment="グループID")
     code = Column(String(100), nullable=False, unique=True, comment="グループコード（例: admin）")

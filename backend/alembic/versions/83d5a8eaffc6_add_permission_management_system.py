@@ -31,7 +31,7 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False, comment='更新日時'),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('code', name='uq_roles_code'),
-        comment='個別権限一覧（どんな権限があるか）'
+        comment='個別権限一覧'
     )
     op.create_index(op.f('ix_roles_id'), 'roles', ['id'], unique=False)
     op.create_index(op.f('ix_roles_resource_type'), 'roles', ['resource_type'], unique=False)
@@ -50,7 +50,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('code', name='uq_group_roles_code'),
-        comment='グループ一覧（どんなグループがあるか）'
+        comment='グループ一覧'
     )
     op.create_index(op.f('ix_group_roles_id'), 'group_roles', ['id'], unique=False)
     op.create_index(op.f('ix_group_roles_company_id'), 'group_roles', ['company_id'], unique=False)
