@@ -40,6 +40,12 @@ class Company(Base):
         back_populates="company",
         cascade="all, delete-orphan",
     )
+    # 権限管理システム
+    group_roles = relationship(
+        "GroupRole",
+        back_populates="company",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<Company(id={self.id}, name='{self.name}')>"

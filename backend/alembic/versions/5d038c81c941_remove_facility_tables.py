@@ -1,7 +1,7 @@
 """remove_facility_tables
 
 Revision ID: 5d038c81c941
-Revises: a1b2c3d4e5f6
+Revises: fb17130d1b02
 Create Date: 2026-01-02 23:24:01.697570
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = '5d038c81c941'
-down_revision: Union[str, None] = 'a1b2c3d4e5f6'
+down_revision: Union[str, None] = 'fb17130d1b02'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

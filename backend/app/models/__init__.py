@@ -14,11 +14,11 @@ from app.models.plan import Plan
 from app.models.comment import Comment
 from app.models.user_assignment import UserBranchAssignment, UserDepartmentAssignment
 from app.models.service import Service, CompanyServiceSubscription, ServiceSubscriptionHistory
-from app.models.permission import Permission
 from app.models.role import Role
-from app.models.role_permission import RolePermission
-from app.models.user_role import UserRole
-from app.models.user_permission import UserPermission
+from app.models.group_role import GroupRole
+from app.models.group_role_permission import GroupRolePermission
+from app.models.user_role_assignment import UserRoleAssignment
+from app.models.user_group_assignment import UserGroupAssignment
 
 __all__ = [
     "Company",
@@ -36,9 +36,9 @@ __all__ = [
     "Service",
     "CompanyServiceSubscription",
     "ServiceSubscriptionHistory",
-    "Permission",
     "Role",
-    "RolePermission",
-    "UserRole",
-    "UserPermission",
+    "GroupRole",
+    "GroupRolePermission",
+    "UserRoleAssignment",
+    "UserGroupAssignment",
 ]

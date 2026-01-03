@@ -53,15 +53,16 @@ class User(Base):
         "ServiceSubscriptionHistory",
         back_populates="changed_by_user",
     )
-    user_roles = relationship(
-        "UserRole",
-        foreign_keys="UserRole.user_id",
+    # 権限管理システム
+    user_role_assignments = relationship(
+        "UserRoleAssignment",
+        foreign_keys="UserRoleAssignment.user_id",
         back_populates="user",
         cascade="all, delete-orphan",
     )
-    user_permissions = relationship(
-        "UserPermission",
-        foreign_keys="UserPermission.user_id",
+    user_group_assignments = relationship(
+        "UserGroupAssignment",
+        foreign_keys="UserGroupAssignment.user_id",
         back_populates="user",
         cascade="all, delete-orphan",
     )
