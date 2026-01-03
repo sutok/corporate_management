@@ -36,6 +36,9 @@ async def test_get_branches_list(client: AsyncClient, db_session: AsyncSession):
     db_session.add(user)
     await db_session.commit()
 
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
+
     # ログイン
     login_response = await client.post(
         "/api/auth/login",
@@ -120,6 +123,9 @@ async def test_update_branch(client: AsyncClient, db_session: AsyncSession):
     )
     db_session.add(user)
     await db_session.commit()
+
+    # テストユーザーに管理者権限を付与
+    await client.assign_admin_permissions(user.id)
 
     # ログイン
     login_response = await client.post(
