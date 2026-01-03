@@ -227,7 +227,7 @@ async def unsubscribe_service(
 
 @router.get("/services", status_code=status.HTTP_200_OK)
 async def get_available_services(
-    current_user: User = Depends(require_any_permission("service.view", "subscription.view")),
+    current_user: User = Depends(require_any_permission(["service.view", "subscription.view"])),
     db: AsyncSession = Depends(get_db),
 ):
     """
