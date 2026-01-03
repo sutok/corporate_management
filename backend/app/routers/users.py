@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
-from app.auth.dependencies import get_current_user
+from app.auth.permissions import require_permission, require_any_permission, check_permission
 from app.auth.password import get_password_hash
 
 router = APIRouter(prefix="/api/users", tags=["users"])
@@ -19,10 +19,14 @@ router = APIRouter(prefix="/api/users", tags=["users"])
 async def get_users(
     skip: int = 0,
     limit: int = 100,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("user.view")),
     db: AsyncSession = Depends(get_db),
 ):
-    """ユーザー一覧取得（同じ企業のみ）"""
+    """
+    ユーザー一覧取得
+
+    必要な権限: user.view
+    """
     result = await db.execute(
         select(User)
         .where(User.company_id == current_user.company_id)
@@ -36,10 +40,14 @@ async def get_users(
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(
     user_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("user.view")),
     db: AsyncSession = Depends(get_db),
 ):
-    """ユーザー詳細取得"""
+    """
+    ユーザー詳細取得
+
+    必要な権限: user.view
+    """
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
@@ -61,16 +69,14 @@ async def get_user(
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
     user: UserCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("user.create")),
     db: AsyncSession = Depends(get_db),
 ):
-    """ユーザー作成（管理者のみ）"""
-    if current_user.role not in ["admin", "manager"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="権限がありません",
-        )
+    """
+    ユーザー作成
 
+    必要な権限: user.create
+    """
     if user.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -100,10 +106,14 @@ async def create_user(
 async def update_user(
     user_id: int,
     user_update: UserUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_any_permission(["user.update", "user.update_self"])),
     db: AsyncSession = Depends(get_db),
 ):
-    """ユーザー更新"""
+    """
+    ユーザー更新
+
+    必要な権限: user.update (他人も更新可能) OR user.update_self (自分のみ)
+    """
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
@@ -119,11 +129,14 @@ async def update_user(
             detail="権限がありません",
         )
 
-    if user.id != current_user.id and current_user.role not in ["admin", "manager"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="他のユーザーを更新する権限がありません",
-        )
+    # 自分以外を更新する場合は user.update 権限が必要
+    if user.id != current_user.id:
+        has_update_permission = await check_permission(db, current_user.id, "user.update")
+        if not has_update_permission:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="他のユーザーを更新する権限がありません",
+            )
 
     update_data = user_update.model_dump(exclude_unset=True)
 
@@ -142,16 +155,14 @@ async def update_user(
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("user.delete")),
     db: AsyncSession = Depends(get_db),
 ):
-    """ユーザー削除（管理者のみ）"""
-    if current_user.role not in ["admin", "manager"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="権限がありません",
-        )
+    """
+    ユーザー削除
 
+    必要な権限: user.delete
+    """
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
