@@ -236,7 +236,9 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/daily-reports`
 - **認証**: 必要
-- **権限**: 全ユーザー（自分の日報）、上長（部下の日報も可）
+- **権限コード**: `report.view_all` OR `report.view_self`
+  - `report.view_all`: 全ユーザーの日報を閲覧可能
+  - `report.view_self`: 自分の日報のみ閲覧可能
 
 #### クエリパラメータ
 
@@ -287,7 +289,9 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/daily-reports/{id}`
 - **認証**: 必要
-- **権限**: 作成者本人、上長
+- **権限コード**: `report.view_all` OR `report.view_self`
+  - `report.view_all`: 全ユーザーの日報を閲覧可能
+  - `report.view_self`: 自分の日報のみ閲覧可能
 
 #### レスポンス (200 OK)
 ```json
@@ -354,7 +358,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `POST /api/daily-reports`
 - **認証**: 必要
-- **権限**: 営業担当者
+- **権限コード**: `report.create`
 
 #### リクエスト
 ```json
@@ -427,7 +431,9 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `PUT /api/daily-reports/{id}`
 - **認証**: 必要
-- **権限**: 作成者本人（報告日の翌々日まで）
+- **権限コード**: `report.update` OR `report.update_self`
+  - `report.update`: 全ユーザーの日報を更新可能
+  - `report.update_self`: 自分の日報のみ更新可能
 
 #### リクエスト
 ```json
@@ -493,7 +499,9 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `DELETE /api/daily-reports/{id}`
 - **認証**: 必要
-- **権限**: 作成者本人
+- **権限コード**: `report.delete` OR `report.delete_self`
+  - `report.delete`: 全ユーザーの日報を削除可能
+  - `report.delete_self`: 自分の日報のみ削除可能
 
 #### レスポンス (204 No Content)
 ```
@@ -876,7 +884,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/customers`
 - **認証**: 必要
-- **権限**: 全ユーザー
+- **権限コード**: `customer.view`
 
 #### クエリパラメータ
 
@@ -927,7 +935,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/customers/{id}`
 - **認証**: 必要
-- **権限**: 全ユーザー
+- **権限コード**: `customer.view`
 
 #### レスポンス (200 OK)
 ```json
@@ -960,7 +968,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `POST /api/customers`
 - **認証**: 必要
-- **権限**: 全ユーザー
+- **権限コード**: `customer.create`
 
 #### リクエスト
 ```json
@@ -996,7 +1004,9 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `PUT /api/customers/{id}`
 - **認証**: 必要
-- **権限**: 全ユーザー
+- **権限コード**: `customer.update` OR `customer.update_self`
+  - `customer.update`: 全顧客の情報を更新可能
+  - `customer.update_self`: 自分が担当する顧客のみ更新可能
 
 #### リクエスト
 ```json
@@ -1030,7 +1040,9 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `DELETE /api/customers/{id}`
 - **認証**: 必要
-- **権限**: 全ユーザー
+- **権限コード**: `customer.delete` OR `customer.delete_self`
+  - `customer.delete`: 全顧客を削除可能
+  - `customer.delete_self`: 自分が担当する顧客のみ削除可能
 
 #### レスポンス (204 No Content)
 ```
@@ -1059,7 +1071,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/users`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `user.view`
 
 #### クエリパラメータ
 
@@ -1107,7 +1119,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/users/{id}`
 - **認証**: 必要
-- **権限**: 管理者、本人
+- **権限コード**: `user.view`
 
 #### レスポンス (200 OK)
 ```json
@@ -1136,7 +1148,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/users/me`
 - **認証**: 必要
-- **権限**: 全ユーザー
+- **権限コード**: 認証済みユーザー（権限チェックなし）
 
 #### レスポンス (200 OK)
 ```json
@@ -1165,7 +1177,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `POST /api/users`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `user.create`
 
 #### リクエスト
 ```json
@@ -1200,7 +1212,9 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `PUT /api/users/{id}`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `user.update` OR `user.update_self`
+  - `user.update`: 全ユーザーの情報を更新可能
+  - `user.update_self`: 自分の情報のみ更新可能
 
 #### リクエスト
 ```json
@@ -1231,7 +1245,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `DELETE /api/users/{id}`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `user.delete`
 
 #### レスポンス (204 No Content)
 ```
@@ -1260,7 +1274,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/companies`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `company.view`
 
 #### レスポンス (200 OK)
 ```json
@@ -1287,7 +1301,8 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/companies/{id}`
 - **認証**: 必要
-- **権限**: 全ユーザー（自社のみ）
+- **権限コード**: `company.view`
+  - 注: 所属企業の情報のみ閲覧可能（実行時チェック）
 
 #### レスポンス (200 OK)
 ```json
@@ -1316,7 +1331,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/branches`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `branch.view`
 
 #### クエリパラメータ
 
@@ -1362,7 +1377,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/branches/{id}`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `branch.view`
 
 #### レスポンス (200 OK)
 ```json
@@ -1397,7 +1412,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `POST /api/branches`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `branch.create`
 
 #### リクエスト
 ```json
@@ -1428,7 +1443,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `PUT /api/branches/{id}`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `branch.update`
 
 #### リクエスト
 ```json
@@ -1458,7 +1473,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `DELETE /api/branches/{id}`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `branch.delete`
 
 #### レスポンス (204 No Content)
 ```
@@ -1487,7 +1502,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/departments`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `department.view`
 
 #### クエリパラメータ
 
@@ -1533,7 +1548,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/departments/{id}`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `department.view`
 
 #### レスポンス (200 OK)
 ```json
@@ -1560,7 +1575,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `POST /api/departments`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `department.create`
 
 #### リクエスト
 ```json
@@ -1592,7 +1607,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `PUT /api/departments/{id}`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `department.update`
 
 #### リクエスト
 ```json
@@ -1622,7 +1637,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `DELETE /api/departments/{id}`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `department.delete`
 
 #### レスポンス (204 No Content)
 ```
@@ -1651,7 +1666,8 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/users/{user_id}/assignments`
 - **認証**: 必要
-- **権限**: 管理者、本人
+- **権限コード**: `user.view`
+  - 注: 管理者または本人のみアクセス可能（実行時チェック）
 
 #### レスポンス (200 OK)
 ```json
@@ -1691,7 +1707,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `POST /api/users/{user_id}/branches`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `user.update`
 
 #### リクエスト
 ```json
@@ -1724,7 +1740,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `DELETE /api/users/{user_id}/branches/{branch_id}`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `user.update`
 
 #### レスポンス (204 No Content)
 ```
@@ -1751,7 +1767,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `PUT /api/users/{user_id}/branches/{branch_id}/primary`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `user.update`
 
 #### レスポンス (200 OK)
 ```json
@@ -1773,7 +1789,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `POST /api/users/{user_id}/departments`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `user.update`
 
 #### リクエスト
 ```json
@@ -1806,7 +1822,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `DELETE /api/users/{user_id}/departments/{department_id}`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `user.update`
 
 #### レスポンス (204 No Content)
 ```
@@ -1833,7 +1849,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `PUT /api/users/{user_id}/departments/{department_id}/primary`
 - **認証**: 必要
-- **権限**: 管理者
+- **権限コード**: `user.update`
 
 #### レスポンス (200 OK)
 ```json
@@ -1857,7 +1873,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/services`
 - **認証**: 必要
-- **権限**: システム管理者
+- **権限コード**: `service.view` OR `subscription.view`
 
 #### クエリパラメータ
 
@@ -1903,7 +1919,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/services/{service_id}`
 - **認証**: 必要
-- **権限**: システム管理者
+- **権限コード**: `service.view`
 
 #### レスポンス (200 OK)
 ```json
@@ -1930,7 +1946,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `POST /api/services`
 - **認証**: 必要
-- **権限**: システム管理者
+- **権限コード**: `service.create`
 
 #### リクエスト
 ```json
@@ -1987,7 +2003,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `PUT /api/services/{service_id}`
 - **認証**: 必要
-- **権限**: システム管理者
+- **権限コード**: `service.update`
 
 #### リクエスト
 ```json
@@ -2027,7 +2043,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `DELETE /api/services/{service_id}`
 - **認証**: 必要
-- **権限**: システム管理者
+- **権限コード**: `service.delete`
 
 #### レスポンス (204 No Content)
 ```
@@ -2056,7 +2072,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/companies/{company_id}/service-subscriptions`
 - **認証**: 必要
-- **権限**: システム管理者
+- **権限コード**: `subscription.view`
 
 #### レスポンス (200 OK)
 ```json
@@ -2091,7 +2107,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `POST /api/companies/{company_id}/service-subscriptions`
 - **認証**: 必要
-- **権限**: システム管理者
+- **権限コード**: `service.subscribe`
 
 #### リクエスト
 ```json
@@ -2150,7 +2166,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `PUT /api/companies/{company_id}/service-subscriptions/{subscription_id}`
 - **認証**: 必要
-- **権限**: システム管理者
+- **権限コード**: `subscription.update`
 
 #### リクエスト
 ```json
@@ -2192,7 +2208,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `DELETE /api/companies/{company_id}/service-subscriptions/{subscription_id}`
 - **認証**: 必要
-- **権限**: システム管理者
+- **権限コード**: `service.unsubscribe`
 
 #### レスポンス (204 No Content)
 ```
@@ -2207,7 +2223,8 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/companies/{company_id}/service-subscriptions/check/{service_code}`
 - **認証**: 必要
-- **権限**: 全ユーザー（所属企業のみ）
+- **権限コード**: 認証済みユーザー（権限チェックなし）
+  - 注: 所属企業の情報のみチェック可能（実行時チェック）
 
 #### レスポンス (200 OK)
 ```json
@@ -2247,7 +2264,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/companies/{company_id}/service-subscriptions/{subscription_id}/history`
 - **認証**: 必要
-- **権限**: システム管理者
+- **権限コード**: `subscription.history`
 
 #### クエリパラメータ
 
@@ -2323,7 +2340,7 @@ Authorization: Bearer {access_token}
 
 - **Endpoint**: `GET /api/companies/{company_id}/service-subscriptions/history`
 - **認証**: 必要
-- **権限**: システム管理者
+- **権限コード**: `subscription.history`
 
 #### クエリパラメータ
 
@@ -2458,5 +2475,57 @@ Authorization: Bearer {access_token}
 
 ---
 
+## 権限システム参照
+
+本API設計書で使用されている権限コードの詳細については、以下のドキュメントを参照してください:
+
+### 📄 関連ドキュメント
+
+- **[API権限マッピング](./API権限マッピング.md)** - エンドポイントと権限コードの完全なマッピング
+- **[権限管理システム](./権限管理.md)** - 権限システムの全体設計と実装詳細
+
+### 🔑 権限コードについて
+
+権限コードは `<resource>.<action>` の形式で表現されます:
+
+**Resource (リソース)**:
+- `branch` - 支店管理
+- `company` - 企業管理
+- `customer` - 顧客管理
+- `department` - 部署管理
+- `report` - 日報管理
+- `service` - サービス管理
+- `subscription` - サービス契約管理
+- `user` - ユーザー管理
+
+**Action (操作)**:
+- `view` - 閲覧
+- `view_all` - 全件閲覧
+- `view_self` - 自分のみ閲覧
+- `create` - 作成
+- `update` - 更新
+- `update_self` - 自分のみ更新
+- `delete` - 削除
+- `delete_self` - 自分のみ削除
+- `subscribe` - サービス契約
+- `unsubscribe` - サービス契約解除
+- `history` - 履歴閲覧
+
+### 📊 権限チェックパターン
+
+1. **Pattern 1: 単一権限 (Basic CRUD)** - 1つの特定権限が必要
+   - 例: `branch.view`, `company.create`
+
+2. **Pattern 2: 自己操作許可 (Self-Operation)** - 自分のデータと他人のデータで異なる権限
+   - 例: `user.update` OR `user.update_self`
+
+3. **Pattern 3: 動的スコープ (Dynamic Scope)** - 実行時にデータ所有者を判定
+   - 例: `report.view_all` OR `report.view_self`
+
+詳細は [API権限マッピング - 権限チェックパターン](./API権限マッピング.md#権限チェックパターン) を参照してください。
+
+---
+
 **作成日**: 2025-12-31
-**バージョン**: 1.0
+**最終更新**: 2026-01-04 (権限コード追加)
+**バージョン**: 1.1
