@@ -148,12 +148,16 @@ async def subscribe_service(
         )
 
     # 新規契約作成
-    from datetime import date
+    from datetime import date, datetime, timedelta
+    today = date.today()
+    expired_date = today + timedelta(days=30)
+
     new_subscription = CompanyServiceSubscription(
         company_id=current_user.company_id,
         service_id=service_id,
         status="active",
-        start_date=date.today(),
+        start_date=today,
+        expired_date=expired_date,
         monthly_price=service.base_price,
     )
 
@@ -161,11 +165,30 @@ async def subscribe_service(
     await db.commit()
     await db.refresh(new_subscription)
 
+    # 操作履歴を記録
+    history = ServiceSubscriptionHistory(
+        company_id=current_user.company_id,
+        subscription_id=new_subscription.id,
+        changed_by_user_id=current_user.id,
+        change_type="create",
+        old_status=None,
+        new_status="active",
+        old_end_date=None,
+        new_end_date=expired_date,
+        old_monthly_price=None,
+        new_monthly_price=service.base_price,
+        change_reason="新規契約",
+        changed_at=datetime.now(),
+    )
+    db.add(history)
+    await db.commit()
+
     return {
         "id": new_subscription.id,
         "service_id": new_subscription.service_id,
         "status": new_subscription.status,
         "start_date": new_subscription.start_date,
+        "expired_date": new_subscription.expired_date,
         "monthly_price": float(new_subscription.monthly_price),
         "message": "サービスの契約が完了しました"
     }
@@ -209,19 +232,63 @@ async def unsubscribe_service(
             detail="この契約は既に解約されています"
         )
 
-    # 契約を解約に変更
-    from datetime import date
+    # 操作履歴の有無をチェック（全APIエンドポイントの履歴）
+    from sqlalchemy import func
+    from datetime import date, datetime
+
+    history_count_result = await db.execute(
+        select(func.count(ServiceSubscriptionHistory.id)).where(
+            ServiceSubscriptionHistory.subscription_id == subscription_id
+        )
+    )
+    has_history = history_count_result.scalar() > 0
+
+    # 当日内かチェック
+    today = date.today()
+    is_same_day = (subscription.start_date == today)
+
+    # 解約処理
+    old_status = subscription.status
+    old_expired_date = subscription.expired_date
     subscription.status = "cancelled"
-    subscription.end_date = date.today()
+
+    if is_same_day and not has_history:
+        # ケース1: 当日 && 履歴なし → 即時解約（無料）
+        subscription.expired_date = today
+        message = "即時解約されました（無料）"
+        change_reason = "即時解約（当日・履歴なし）"
+    else:
+        # ケース2: 当日超過 || 履歴あり → expired_dateまで継続
+        # expired_dateはそのまま
+        message = f"解約予約が完了しました。{subscription.expired_date}まで利用可能です"
+        change_reason = "解約予約（期限日まで継続）"
 
     await db.commit()
     await db.refresh(subscription)
 
+    # 操作履歴を記録
+    history = ServiceSubscriptionHistory(
+        company_id=subscription.company_id,
+        subscription_id=subscription.id,
+        changed_by_user_id=current_user.id,
+        change_type="update",
+        old_status=old_status,
+        new_status="cancelled",
+        old_end_date=old_expired_date,
+        new_end_date=subscription.expired_date,
+        old_monthly_price=subscription.monthly_price,
+        new_monthly_price=subscription.monthly_price,
+        change_reason=change_reason,
+        changed_at=datetime.now(),
+    )
+    db.add(history)
+    await db.commit()
+
     return {
         "id": subscription.id,
         "status": subscription.status,
-        "end_date": subscription.end_date,
-        "message": "サービスの解約が完了しました"
+        "expired_date": subscription.expired_date,
+        "message": message
     }
 
 

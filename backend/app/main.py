@@ -1,11 +1,32 @@
 """
 FastAPI アプリケーション メインエントリーポイント
 """
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
+from app.scheduler import start_scheduler
+import logging
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
+
+scheduler = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """アプリケーションのライフサイクル管理"""
+    global scheduler
+    # 起動時
+    logger.info("アプリケーション起動: スケジューラーを開始します")
+    scheduler = start_scheduler()
+    yield
+    # 終了時
+    logger.info("アプリケーション終了: スケジューラーを停止します")
+    if scheduler:
+        scheduler.shutdown()
+
 
 # FastAPIアプリケーション
 app = FastAPI(
@@ -13,6 +34,7 @@ app = FastAPI(
     version=settings.APP_VERSION,
     description="営業日報システム API",
     debug=settings.DEBUG,
+    lifespan=lifespan,
 )
 
 # CORS設定

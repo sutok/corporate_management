@@ -62,10 +62,10 @@ class CompanyServiceSubscription(Base):
         String(50),
         nullable=False,
         default="active",
-        comment="契約状態（active/suspended/cancelled）",
+        comment="契約状態（active/cancelled/expired）",
     )
     start_date = Column(Date, nullable=False, comment="契約開始日")
-    end_date = Column(Date, nullable=True, comment="契約終了日")
+    expired_date = Column(Date, nullable=False, comment="期限日")
     monthly_price = Column(Numeric(10, 2), nullable=False, comment="月額料金（企業別カスタム料金）")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="作成日時")
     updated_at = Column(
@@ -118,8 +118,8 @@ class ServiceSubscriptionHistory(Base):
     change_type = Column(String(50), nullable=False, comment="変更種別（create/update/delete）")
     old_status = Column(String(50), nullable=True, comment="変更前の契約状態")
     new_status = Column(String(50), nullable=True, comment="変更後の契約状態")
-    old_end_date = Column(Date, nullable=True, comment="変更前の終了日")
-    new_end_date = Column(Date, nullable=True, comment="変更後の終了日")
+    old_end_date = Column(Date, nullable=True, comment="変更前の期限日")
+    new_end_date = Column(Date, nullable=True, comment="変更後の期限日")
     old_monthly_price = Column(Numeric(10, 2), nullable=True, comment="変更前の月額料金")
     new_monthly_price = Column(Numeric(10, 2), nullable=True, comment="変更後の月額料金")
     change_reason = Column(Text, nullable=True, comment="変更理由")

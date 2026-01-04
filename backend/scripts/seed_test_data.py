@@ -329,19 +329,25 @@ async def seed_test_data():
             org_management_service = next(s for s in services if s.service_code == "ORGANIZATION_MANAGEMENT")
             daily_report_service = next(s for s in services if s.service_code == "DAILY_REPORT")
 
+            from datetime import timedelta
+
             for company in companies:
+                today = date.today()
+                expired_date = today + timedelta(days=30)
+
                 # 全企業: 組織管理サービス（基本サービス）
                 org_subscription = CompanyServiceSubscription(
                     company_id=company.id,
                     service_id=org_management_service.id,
                     status="active",
-                    start_date=date.today(),
+                    start_date=today,
+                    expired_date=expired_date,
                     monthly_price=org_management_service.base_price,
                 )
                 session.add(org_subscription)
                 await session.flush()
                 subscriptions.append(org_subscription)
-                print(f"+ 契約: {company.name} → {org_management_service.service_name} (月額: ¥{org_subscription.monthly_price:,.0f})")
+                print(f"+ 契約: {company.name} → {org_management_service.service_name} (月額: ¥{org_subscription.monthly_price:,.0f}, 期限: {expired_date})")
 
                 # company_id=1 のみ: 日報管理サービス（オプション）
                 if company.id == 1:
@@ -349,13 +355,14 @@ async def seed_test_data():
                         company_id=company.id,
                         service_id=daily_report_service.id,
                         status="active",
-                        start_date=date.today(),
+                        start_date=today,
+                        expired_date=expired_date,
                         monthly_price=daily_report_service.base_price,
                     )
                     session.add(daily_report_subscription)
                     await session.flush()
                     subscriptions.append(daily_report_subscription)
-                    print(f"+ 契約: {company.name} → {daily_report_service.service_name} (月額: ¥{daily_report_subscription.monthly_price:,.0f}) ★オプション")
+                    print(f"+ 契約: {company.name} → {daily_report_service.service_name} (月額: ¥{daily_report_subscription.monthly_price:,.0f}, 期限: {expired_date}) ★オプション")
                 else:
                     print(f"  未契約: {company.name} → {daily_report_service.service_name} (日報機能は利用不可)")
 
