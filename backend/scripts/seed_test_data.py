@@ -3,9 +3,11 @@
 
 組織系:
 - 2企業（東京商事、大阪物産）
-- 各企業に2支社
-- 各支社に1部署
-- 各支社に1ユーザー（支社1: 一般ユーザー、支社2: 管理者）
+- 各企業に2支店
+- 各支店に1部署
+- ユーザー5名
+  - 東京商事: システム管理者(全権限)、一般スタッフ、マネージャー
+  - 大阪物産: 一般スタッフ、マネージャー
 
 サービス系:
 - 組織管理サービス
@@ -19,7 +21,7 @@ from pathlib import Path
 backend_dir = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from datetime import date
+from datetime import date, datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -33,8 +35,8 @@ from app.models import (
     User,
     Service,
     CompanyServiceSubscription,
-    Role,
-    UserRole,
+    GroupRole,
+    UserGroupAssignment,
 )
 
 settings = get_settings()
@@ -167,29 +169,30 @@ async def seed_test_data():
             print(f"支店・部署作成完了: {len(branches)} 支店, {len(departments)} 部署")
 
             # ========================================
-            # 3. ロール取得
+            # 3. グループロール取得
             # ========================================
-            print("\n=== ロール取得 ===")
+            print("\n=== グループロール取得 ===")
 
-            # basic_userロール取得
+            # adminグループ取得
             result = await session.execute(
-                select(Role).where(
-                    Role.code == "basic_user",
-                    Role.is_system == True
-                )
+                select(GroupRole).where(GroupRole.code == "admin")
             )
-            basic_user_role = result.scalar_one()
-            print(f"+ basic_userロール取得 (ID: {basic_user_role.id})")
+            admin_group = result.scalar_one()
+            print(f"+ adminグループ取得 (ID: {admin_group.id})")
 
-            # company_adminロール取得
+            # managerグループ取得
             result = await session.execute(
-                select(Role).where(
-                    Role.code == "company_admin",
-                    Role.is_system == True
-                )
+                select(GroupRole).where(GroupRole.code == "manager")
             )
-            company_admin_role = result.scalar_one()
-            print(f"+ company_adminロール取得 (ID: {company_admin_role.id})")
+            manager_group = result.scalar_one()
+            print(f"+ managerグループ取得 (ID: {manager_group.id})")
+
+            # staffグループ取得
+            result = await session.execute(
+                select(GroupRole).where(GroupRole.code == "staff")
+            )
+            staff_group = result.scalar_one()
+            print(f"+ staffグループ取得 (ID: {staff_group.id})")
 
             # ========================================
             # 4. ユーザー作成（各支店に1名）
@@ -197,6 +200,17 @@ async def seed_test_data():
             print("\n=== ユーザーの作成 ===")
 
             users_data = [
+                # 東京商事 - 東京本社（システム管理者）
+                {
+                    "company_id": companies[0].id,
+                    "name": "管理者太郎",
+                    "email": "admin@tokyo-shoji.co.jp",
+                    "password": "admin123",
+                    "role": "システム管理者",
+                    "position": "社長",
+                    "group_role": admin_group,
+                    "branch_name": "東京本社",
+                },
                 # 東京商事 - 東京本社（一般ユーザー）
                 {
                     "company_id": companies[0].id,
@@ -205,18 +219,18 @@ async def seed_test_data():
                     "password": "password123",
                     "role": "営業",
                     "position": "一般社員",
-                    "role_obj": basic_user_role,
+                    "group_role": staff_group,
                     "branch_name": "東京本社",
                 },
-                # 東京商事 - 横浜支店（管理者）
+                # 東京商事 - 横浜支店（マネージャー）
                 {
                     "company_id": companies[0].id,
                     "name": "佐藤花子",
                     "email": "sato@tokyo-shoji.co.jp",
                     "password": "password123",
-                    "role": "管理者",
+                    "role": "マネージャー",
                     "position": "部長",
-                    "role_obj": company_admin_role,
+                    "group_role": manager_group,
                     "branch_name": "横浜支店",
                 },
                 # 大阪物産 - 大阪本社（一般ユーザー）
@@ -227,25 +241,25 @@ async def seed_test_data():
                     "password": "password123",
                     "role": "営業",
                     "position": "一般社員",
-                    "role_obj": basic_user_role,
+                    "group_role": staff_group,
                     "branch_name": "大阪本社",
                 },
-                # 大阪物産 - 神戸支店（管理者）
+                # 大阪物産 - 神戸支店（マネージャー）
                 {
                     "company_id": companies[1].id,
                     "name": "田中美咲",
                     "email": "tanaka@osaka-bussan.co.jp",
                     "password": "password123",
-                    "role": "管理者",
+                    "role": "マネージャー",
                     "position": "部長",
-                    "role_obj": company_admin_role,
+                    "group_role": manager_group,
                     "branch_name": "神戸支店",
                 },
             ]
 
             users = []
             for user_data in users_data:
-                role_obj = user_data.pop("role_obj")
+                group_role = user_data.pop("group_role")
                 password = user_data.pop("password")
                 branch_name = user_data.pop("branch_name")
 
@@ -256,16 +270,17 @@ async def seed_test_data():
                 session.add(user)
                 await session.flush()
 
-                # ロール割り当て
-                user_role = UserRole(
+                # グループロール割り当て
+                user_group = UserGroupAssignment(
                     user_id=user.id,
-                    role_id=role_obj.id,
+                    group_role_id=group_role.id,
+                    assigned_at=datetime.now(),
                 )
-                session.add(user_role)
+                session.add(user_group)
 
                 users.append(user)
                 company = next(c for c in companies if c.id == user.company_id)
-                print(f"+ 作成: {user.name} ({user.email}) - {role_obj.name} (企業: {company.name}, 支店: {branch_name})")
+                print(f"+ 作成: {user.name} ({user.email}) - {group_role.name} (企業: {company.name}, 支店: {branch_name})")
 
             await session.commit()
             print(f"ユーザー作成完了: {len(users)} 名")
@@ -341,11 +356,12 @@ async def seed_test_data():
             print(f"  契約: {len(subscriptions)} 件")
             print("\n【ログイン情報】")
             print("  東京商事:")
-            print("    東京本社 (一般): yamada@tokyo-shoji.co.jp / password123")
-            print("    横浜支店 (管理): sato@tokyo-shoji.co.jp / password123")
+            print("    東京本社 (システム管理者): admin@tokyo-shoji.co.jp / admin123 ★全権限")
+            print("    東京本社 (一般スタッフ): yamada@tokyo-shoji.co.jp / password123")
+            print("    横浜支店 (マネージャー): sato@tokyo-shoji.co.jp / password123")
             print("  大阪物産:")
-            print("    大阪本社 (一般): suzuki@osaka-bussan.co.jp / password123")
-            print("    神戸支店 (管理): tanaka@osaka-bussan.co.jp / password123")
+            print("    大阪本社 (一般スタッフ): suzuki@osaka-bussan.co.jp / password123")
+            print("    神戸支店 (マネージャー): tanaka@osaka-bussan.co.jp / password123")
 
         except Exception as e:
             await session.rollback()

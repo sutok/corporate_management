@@ -41,8 +41,16 @@ export interface Branch {
   company_id: number
   name: string
   address?: string
+  phone?: string
   created_at: string
   updated_at: string
+}
+
+export interface BranchCreate {
+  company_id: number
+  name: string
+  address?: string
+  phone?: string
 }
 
 // 部署関連の型定義

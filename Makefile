@@ -107,6 +107,7 @@ db-migrate-create: ## Create a new migration (usage: make db-migrate-create MSG=
 db-seed: ## Seed database with initial data
 	@echo "$(BLUE)Seeding database...$(NC)"
 	docker compose exec backend python scripts/seed_permissions.py
+	docker compose exec backend python scripts/seed_test_data.py
 	@echo "$(GREEN)Database seeded successfully!$(NC)"
 
 db-shell: ## Access PostgreSQL shell
@@ -128,6 +129,7 @@ db-reset: ## Reset database (WARNING: destroys all data)
 		docker compose exec backend alembic upgrade head; \
 		echo "$(BLUE)Seeding database...$(NC)"; \
 		docker compose exec backend python scripts/seed_permissions.py; \
+		docker compose exec backend python scripts/seed_test_data.py; \
 		echo "$(GREEN)Database reset completed!$(NC)"; \
 		echo "Backend: http://localhost:8000"; \
 		echo "Frontend: http://localhost:5173"; \

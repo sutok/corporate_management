@@ -31,9 +31,14 @@ const Layout = ({ children }: LayoutProps) => {
               日報管理
             </Link>
             {(user?.role === 'admin' || user?.role === 'manager') && (
-              <Link to="/users" className="nav-link">
-                ユーザー管理
-              </Link>
+              <>
+                <Link to="/users" className="nav-link">
+                  ユーザー管理
+                </Link>
+                <Link to="/branches" className="nav-link">
+                  支店管理
+                </Link>
+              </>
             )}
           </nav>
           <div className="user-menu">

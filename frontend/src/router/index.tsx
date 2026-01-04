@@ -7,6 +7,7 @@ import LoginPage from '@/pages/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
 import DailyReportsPage from '@/pages/DailyReportsPage'
 import UsersPage from '@/pages/UsersPage'
+import BranchesPage from '@/pages/BranchesPage'
 
 // 認証が必要なルートを保護するコンポーネント
 interface ProtectedRouteProps {
@@ -72,6 +73,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <UsersPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/branches',
+    element: (
+      <ProtectedRoute>
+        <BranchesPage />
       </ProtectedRoute>
     ),
   },
