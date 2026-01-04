@@ -245,3 +245,160 @@ async def test_create_company_forbidden_for_regular_user(
     assert response.status_code == 403
     # 権限システムの新しいエラーメッセージ形式
     assert "権限" in response.json()["detail"]
+
+
+# ========================================
+# 権限テスト (Permission Tests)
+# ========================================
+
+@pytest.mark.asyncio
+async def test_get_company_without_authentication(client: AsyncClient):
+    """認証なしで企業一覧取得 - 401エラー"""
+    response = await client.get("/api/companies")
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_get_company_without_permission(client: AsyncClient, db_session: AsyncSession):
+    """権限なしで企業一覧取得 - 403エラー"""
+    company = Company(name="テスト企業")
+    db_session.add(company)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="一般ユーザー",
+        email="user@example.com",
+        password_hash=get_password_hash("password123"),
+        role="user",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    login_response = await client.post(
+        "/api/auth/login",
+        json={"email": "user@example.com", "password": "password123"},
+    )
+    token = login_response.json()["access_token"]
+
+    response = await client.get(
+        "/api/companies",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 403
+    assert "権限" in response.json()["detail"]
+
+@pytest.mark.asyncio
+async def test_post_company_without_authentication(client: AsyncClient):
+    """認証なしで企業作成 - 401エラー"""
+    response = await client.post("/api/companies",
+        json={"name": "テスト"})
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_post_company_without_permission(client: AsyncClient, db_session: AsyncSession):
+    """権限なしで企業作成 - 403エラー"""
+    company = Company(name="テスト企業")
+    db_session.add(company)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="一般ユーザー",
+        email="user@example.com",
+        password_hash=get_password_hash("password123"),
+        role="user",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    login_response = await client.post(
+        "/api/auth/login",
+        json={"email": "user@example.com", "password": "password123"},
+    )
+    token = login_response.json()["access_token"]
+
+    response = await client.post(
+        "/api/companies",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"name": "テスト"},
+    )
+
+    assert response.status_code == 403
+    assert "権限" in response.json()["detail"]
+
+@pytest.mark.asyncio
+async def test_put_company_without_authentication(client: AsyncClient):
+    """認証なしで企業更新 - 401エラー"""
+    response = await client.put("/api/companies/1",
+        json={"name": "テスト"})
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_put_company_without_permission(client: AsyncClient, db_session: AsyncSession):
+    """権限なしで企業更新 - 403エラー"""
+    company = Company(name="テスト企業")
+    db_session.add(company)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="一般ユーザー",
+        email="user@example.com",
+        password_hash=get_password_hash("password123"),
+        role="user",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    login_response = await client.post(
+        "/api/auth/login",
+        json={"email": "user@example.com", "password": "password123"},
+    )
+    token = login_response.json()["access_token"]
+
+    response = await client.put(
+        "/api/companies/1",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"name": "テスト"},
+    )
+
+    assert response.status_code == 403
+    assert "権限" in response.json()["detail"]
+
+@pytest.mark.asyncio
+async def test_delete_company_without_authentication(client: AsyncClient):
+    """認証なしで企業削除 - 401エラー"""
+    response = await client.delete("/api/companies/1")
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_delete_company_without_permission(client: AsyncClient, db_session: AsyncSession):
+    """権限なしで企業削除 - 403エラー"""
+    company = Company(name="テスト企業")
+    db_session.add(company)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="一般ユーザー",
+        email="user@example.com",
+        password_hash=get_password_hash("password123"),
+        role="user",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    login_response = await client.post(
+        "/api/auth/login",
+        json={"email": "user@example.com", "password": "password123"},
+    )
+    token = login_response.json()["access_token"]
+
+    response = await client.delete(
+        "/api/companies/1",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 403
+    assert "権限" in response.json()["detail"]

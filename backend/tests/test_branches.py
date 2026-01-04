@@ -190,3 +190,191 @@ async def test_delete_branch(client: AsyncClient, db_session: AsyncSession):
     )
 
     assert response.status_code == 204
+
+
+# ========================================
+# 権限テスト (Permission Tests)
+# ========================================
+
+
+@pytest.mark.asyncio
+async def test_get_branches_without_authentication(client: AsyncClient, db_session: AsyncSession):
+    """認証なしで支店一覧取得 - 401エラー"""
+    response = await client.get("/api/branches")
+    assert response.status_code == 401
+    assert "Not authenticated" in response.json()["detail"] or "認証" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_get_branches_without_permission(client: AsyncClient, db_session: AsyncSession):
+    """権限なしで支店一覧取得 - 403エラー"""
+    company = Company(name="テスト企業")
+    db_session.add(company)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="一般ユーザー",
+        email="user@example.com",
+        password_hash=get_password_hash("password123"),
+        role="user",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    # 権限を付与しない
+
+    # ログイン
+    login_response = await client.post(
+        "/api/auth/login",
+        json={"email": "user@example.com", "password": "password123"},
+    )
+    token = login_response.json()["access_token"]
+
+    # 支店一覧取得
+    response = await client.get(
+        "/api/branches",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 403
+    assert "権限" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_create_branch_without_authentication(client: AsyncClient, db_session: AsyncSession):
+    """認証なしで支店作成 - 401エラー"""
+    response = await client.post(
+        "/api/branches",
+        json={"company_id": 1, "name": "テスト支店"},
+    )
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_create_branch_without_permission(client: AsyncClient, db_session: AsyncSession):
+    """権限なしで支店作成 - 403エラー"""
+    company = Company(name="テスト企業")
+    db_session.add(company)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="一般ユーザー",
+        email="user@example.com",
+        password_hash=get_password_hash("password123"),
+        role="user",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    # ログイン
+    login_response = await client.post(
+        "/api/auth/login",
+        json={"email": "user@example.com", "password": "password123"},
+    )
+    token = login_response.json()["access_token"]
+
+    # 支店作成
+    response = await client.post(
+        "/api/branches",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"company_id": company.id, "name": "テスト支店"},
+    )
+
+    assert response.status_code == 403
+    assert "権限" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_update_branch_without_authentication(client: AsyncClient, db_session: AsyncSession):
+    """認証なしで支店更新 - 401エラー"""
+    response = await client.put(
+        "/api/branches/1",
+        json={"name": "更新後"},
+    )
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_update_branch_without_permission(client: AsyncClient, db_session: AsyncSession):
+    """権限なしで支店更新 - 403エラー"""
+    company = Company(name="テスト企業")
+    db_session.add(company)
+    await db_session.flush()
+
+    branch = Branch(company_id=company.id, name="テスト支店")
+    db_session.add(branch)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="一般ユーザー",
+        email="user@example.com",
+        password_hash=get_password_hash("password123"),
+        role="user",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    # ログイン
+    login_response = await client.post(
+        "/api/auth/login",
+        json={"email": "user@example.com", "password": "password123"},
+    )
+    token = login_response.json()["access_token"]
+
+    # 支店更新
+    response = await client.put(
+        f"/api/branches/{branch.id}",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"name": "更新後"},
+    )
+
+    assert response.status_code == 403
+    assert "権限" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_delete_branch_without_authentication(client: AsyncClient, db_session: AsyncSession):
+    """認証なしで支店削除 - 401エラー"""
+    response = await client.delete("/api/branches/1")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_delete_branch_without_permission(client: AsyncClient, db_session: AsyncSession):
+    """権限なしで支店削除 - 403エラー"""
+    company = Company(name="テスト企業")
+    db_session.add(company)
+    await db_session.flush()
+
+    branch = Branch(company_id=company.id, name="テスト支店")
+    db_session.add(branch)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="一般ユーザー",
+        email="user@example.com",
+        password_hash=get_password_hash("password123"),
+        role="user",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    # ログイン
+    login_response = await client.post(
+        "/api/auth/login",
+        json={"email": "user@example.com", "password": "password123"},
+    )
+    token = login_response.json()["access_token"]
+
+    # 支店削除
+    response = await client.delete(
+        f"/api/branches/{branch.id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 403
+    assert "権限" in response.json()["detail"]

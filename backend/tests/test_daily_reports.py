@@ -236,3 +236,160 @@ async def test_get_daily_reports_with_date_filter(
     assert response.status_code == 200
     reports = response.json()
     assert len(reports) >= 1
+
+
+# ========================================
+# 権限テスト (Permission Tests)
+# ========================================
+
+@pytest.mark.asyncio
+async def test_get_daily_report_without_authentication(client: AsyncClient):
+    """認証なしで日報一覧取得 - 401エラー"""
+    response = await client.get("/api/daily-reports")
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_get_daily_report_without_permission(client: AsyncClient, db_session: AsyncSession):
+    """権限なしで日報一覧取得 - 403エラー"""
+    company = Company(name="テスト企業")
+    db_session.add(company)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="一般ユーザー",
+        email="user@example.com",
+        password_hash=get_password_hash("password123"),
+        role="user",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    login_response = await client.post(
+        "/api/auth/login",
+        json={"email": "user@example.com", "password": "password123"},
+    )
+    token = login_response.json()["access_token"]
+
+    response = await client.get(
+        "/api/daily-reports",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 403
+    assert "権限" in response.json()["detail"]
+
+@pytest.mark.asyncio
+async def test_post_daily_report_without_authentication(client: AsyncClient):
+    """認証なしで日報作成 - 401エラー"""
+    response = await client.post("/api/daily-reports",
+        json={"company_id": 1, "user_id": 1, "report_date": "2026-01-01"})
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_post_daily_report_without_permission(client: AsyncClient, db_session: AsyncSession):
+    """権限なしで日報作成 - 403エラー"""
+    company = Company(name="テスト企業")
+    db_session.add(company)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="一般ユーザー",
+        email="user@example.com",
+        password_hash=get_password_hash("password123"),
+        role="user",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    login_response = await client.post(
+        "/api/auth/login",
+        json={"email": "user@example.com", "password": "password123"},
+    )
+    token = login_response.json()["access_token"]
+
+    response = await client.post(
+        "/api/daily-reports",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"company_id": 1, "user_id": 1, "report_date": "2026-01-01"},
+    )
+
+    assert response.status_code == 403
+    assert "権限" in response.json()["detail"]
+
+@pytest.mark.asyncio
+async def test_put_daily_report_without_authentication(client: AsyncClient):
+    """認証なしで日報更新 - 401エラー"""
+    response = await client.put("/api/daily-reports/1",
+        json={"company_id": 1, "user_id": 1, "report_date": "2026-01-01"})
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_put_daily_report_without_permission(client: AsyncClient, db_session: AsyncSession):
+    """権限なしで日報更新 - 403エラー"""
+    company = Company(name="テスト企業")
+    db_session.add(company)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="一般ユーザー",
+        email="user@example.com",
+        password_hash=get_password_hash("password123"),
+        role="user",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    login_response = await client.post(
+        "/api/auth/login",
+        json={"email": "user@example.com", "password": "password123"},
+    )
+    token = login_response.json()["access_token"]
+
+    response = await client.put(
+        "/api/daily-reports/1",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"company_id": 1, "user_id": 1, "report_date": "2026-01-01"},
+    )
+
+    assert response.status_code == 403
+    assert "権限" in response.json()["detail"]
+
+@pytest.mark.asyncio
+async def test_delete_daily_report_without_authentication(client: AsyncClient):
+    """認証なしで日報削除 - 401エラー"""
+    response = await client.delete("/api/daily-reports/1")
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_delete_daily_report_without_permission(client: AsyncClient, db_session: AsyncSession):
+    """権限なしで日報削除 - 403エラー"""
+    company = Company(name="テスト企業")
+    db_session.add(company)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="一般ユーザー",
+        email="user@example.com",
+        password_hash=get_password_hash("password123"),
+        role="user",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    login_response = await client.post(
+        "/api/auth/login",
+        json={"email": "user@example.com", "password": "password123"},
+    )
+    token = login_response.json()["access_token"]
+
+    response = await client.delete(
+        "/api/daily-reports/1",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 403
+    assert "権限" in response.json()["detail"]
