@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import AsyncSessionLocal
 from app.models.service import CompanyServiceSubscription, ServiceSubscriptionHistory
+from app.models.audit_log import AuditLog
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +69,39 @@ async def auto_renew_subscriptions():
 
         except Exception as e:
             logger.error(f"自動更新ジョブでエラーが発生しました: {e}")
+            await db.rollback()
+            raise
+
+
+async def cleanup_old_audit_logs():
+    """
+    古い操作履歴の削除ジョブ
+
+    90日以上前の操作履歴を削除する
+    毎日実行
+    """
+    logger.info("操作履歴クリーンアップジョブ開始")
+
+    async with AsyncSessionLocal() as db:
+        try:
+            # 90日前の日付を計算
+            cutoff_date = datetime.now() - timedelta(days=90)
+
+            # 90日以上前の操作履歴を削除
+            result = await db.execute(
+                select(AuditLog).where(AuditLog.created_at < cutoff_date)
+            )
+            old_logs = result.scalars().all()
+
+            deleted_count = len(old_logs)
+            for log in old_logs:
+                await db.delete(log)
+
+            await db.commit()
+            logger.info(f"操作履歴クリーンアップ完了: {deleted_count}件の古い記録を削除しました")
+
+        except Exception as e:
+            logger.error(f"操作履歴クリーンアップジョブでエラーが発生しました: {e}")
             await db.rollback()
             raise
 
@@ -151,6 +185,16 @@ def start_scheduler():
         replace_existing=True,
     )
     logger.info("期限切れ処理ジョブを登録しました（毎日 00:00）")
+
+    # 操作履歴クリーンアップジョブ: 毎日 01:00 に実行
+    scheduler.add_job(
+        cleanup_old_audit_logs,
+        CronTrigger(hour=1, minute=0),
+        id="cleanup_old_audit_logs",
+        name="操作履歴クリーンアップ",
+        replace_existing=True,
+    )
+    logger.info("操作履歴クリーンアップジョブを登録しました（毎日 01:00）")
 
     scheduler.start()
     logger.info("スケジューラーを起動しました")

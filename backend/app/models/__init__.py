@@ -19,6 +19,7 @@ from app.models.group_role import GroupRole
 from app.models.group_role_permission import GroupRolePermission
 from app.models.user_role_assignment import UserRoleAssignment
 from app.models.user_group_assignment import UserGroupAssignment
+from app.models.audit_log import AuditLog
 
 __all__ = [
     "Company",
@@ -41,4 +42,5 @@ __all__ = [
     "GroupRolePermission",
     "UserRoleAssignment",
     "UserGroupAssignment",
+    "AuditLog",
 ]
