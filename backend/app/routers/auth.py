@@ -17,7 +17,7 @@ from app.auth.dependencies import get_current_active_user
 router = APIRouter(prefix="/api/auth", tags=["認証"])
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login")
 async def login(
     login_request: LoginRequest,
     db: AsyncSession = Depends(get_db),
@@ -30,7 +30,7 @@ async def login(
         db: データベースセッション
 
     Returns:
-        アクセストークン
+        アクセストークンとユーザー情報
 
     Raises:
         HTTPException: 認証に失敗した場合
@@ -54,7 +54,11 @@ async def login(
         data={"user_id": user.id, "email": user.email}
     )
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": UserResponse.model_validate(user)
+    }
 
 
 @router.post("/login/form", response_model=Token)

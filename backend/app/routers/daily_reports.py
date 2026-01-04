@@ -12,6 +12,7 @@ from app.models.daily_report import DailyReport
 from app.models.user import User
 from app.schemas.daily_report import DailyReportCreate, DailyReportUpdate, DailyReportResponse
 from app.auth.permissions import require_permission, require_any_permission, check_permission
+from app.auth.subscription import require_daily_report_subscription
 
 router = APIRouter(prefix="/api/daily-reports", tags=["daily-reports"])
 
@@ -24,11 +25,13 @@ async def get_daily_reports(
     skip: int = 0,
     limit: int = 100,
     current_user: User = Depends(require_any_permission(["report.view_all", "report.view_self"])),
+    _: None = Depends(require_daily_report_subscription()),
     db: AsyncSession = Depends(get_db),
 ):
     """
     日報一覧取得
 
+    必要な契約: DAILY_REPORT サービス
     必要な権限: report.view_all (全日報) OR report.view_self (自分の日報のみ)
     """
     # company_idで直接フィルタリング（JOIN不要）
@@ -58,11 +61,13 @@ async def get_daily_reports(
 async def get_daily_report(
     report_id: int,
     current_user: User = Depends(require_any_permission(["report.view_all", "report.view_self"])),
+    _: None = Depends(require_daily_report_subscription()),
     db: AsyncSession = Depends(get_db),
 ):
     """
     日報詳細取得
 
+    必要な契約: DAILY_REPORT サービス
     必要な権限: report.view_all (全日報) OR report.view_self (自分の日報のみ)
     """
     result = await db.execute(
@@ -98,11 +103,13 @@ async def get_daily_report(
 async def create_daily_report(
     daily_report: DailyReportCreate,
     current_user: User = Depends(require_permission("report.create")),
+    _: None = Depends(require_daily_report_subscription()),
     db: AsyncSession = Depends(get_db),
 ):
     """
     日報作成
 
+    必要な契約: DAILY_REPORT サービス
     必要な権限: report.create
     注意: 他人の日報を作成する場合は追加でreport.updateが必要
     """
@@ -140,11 +147,13 @@ async def update_daily_report(
     report_id: int,
     daily_report_update: DailyReportUpdate,
     current_user: User = Depends(require_any_permission(["report.update", "report.update_self"])),
+    _: None = Depends(require_daily_report_subscription()),
     db: AsyncSession = Depends(get_db),
 ):
     """
     日報更新
 
+    必要な契約: DAILY_REPORT サービス
     必要な権限: report.update (全日報) OR report.update_self (自分の日報のみ)
     """
     result = await db.execute(select(DailyReport).where(DailyReport.id == report_id))
@@ -185,11 +194,13 @@ async def update_daily_report(
 async def delete_daily_report(
     report_id: int,
     current_user: User = Depends(require_any_permission(["report.delete", "report.delete_self"])),
+    _: None = Depends(require_daily_report_subscription()),
     db: AsyncSession = Depends(get_db),
 ):
     """
     日報削除
 
+    必要な契約: DAILY_REPORT サービス
     必要な権限: report.delete (全日報) OR report.delete_self (自分の日報のみ)
     """
     result = await db.execute(select(DailyReport).where(DailyReport.id == report_id))

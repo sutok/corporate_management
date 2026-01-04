@@ -12,7 +12,8 @@ from app.auth.jwt import decode_access_token
 from app.models.user import User
 
 # OAuth2スキーム（トークンをAuthorizationヘッダーから取得）
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+# Swagger UI用にフォーム形式のログインエンドポイントを指定
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login/form")
 
 
 async def get_current_user(
