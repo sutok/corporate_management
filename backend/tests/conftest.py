@@ -159,3 +159,38 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def auth_headers(client: AsyncClient, db_session: AsyncSession):
+    """認証済みヘッダーを返すフィクスチャ"""
+    from app.models.company import Company
+    from app.models.user import User
+    from app.auth.password import get_password_hash
+
+    # テスト用企業とユーザーを作成
+    company = Company(name="テスト株式会社")
+    db_session.add(company)
+    await db_session.flush()
+
+    user = User(
+        company_id=company.id,
+        name="テストユーザー",
+        email="sales@example.com",
+        password_hash=get_password_hash("password123"),
+        role="manager",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    # 管理者権限を付与
+    await assign_admin_permissions(db_session, user.id)
+
+    # ログインしてトークン取得
+    response = await client.post(
+        "/api/auth/login",
+        json={"email": "sales@example.com", "password": "password123"},
+    )
+    token = response.json()["access_token"]
+
+    return {"Authorization": f"Bearer {token}"}
