@@ -226,16 +226,29 @@ async def unsubscribe_service(
 
 
 @router.get("/services", status_code=status.HTTP_200_OK)
-async def get_available_services(
+async def get_subscribed_services(
     current_user: User = Depends(require_any_permission(["service.view", "subscription.view"])),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    利用可能なサービス一覧取得
+    自社が契約中のサービス一覧取得
 
     必要な権限: service.view または subscription.view（いずれか）
+
+    Returns:
+        自社が契約中のサービスのみを返却（情報漏洩防止）
     """
-    query = select(Service).where(Service.is_active == True)
+    # 自社の契約中サービスのみを取得（JOINで絞り込み）
+    query = (
+        select(Service)
+        .join(
+            CompanyServiceSubscription,
+            (CompanyServiceSubscription.service_id == Service.id)
+            & (CompanyServiceSubscription.company_id == current_user.company_id)
+            & (CompanyServiceSubscription.status == "active"),
+        )
+        .where(Service.is_active == True)
+    )
     result = await db.execute(query)
     services = result.scalars().all()
 

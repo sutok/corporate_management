@@ -319,24 +319,45 @@ async def seed_test_data():
             print(f"サービス作成完了: {len(services)} 件")
 
             # ========================================
-            # 6. サービス契約（全企業が全サービスを契約）
+            # 6. サービス契約（選択的契約）
             # ========================================
             print("\n=== サービス契約の作成 ===")
 
             subscriptions = []
+
+            # サービスをコードで取得
+            org_management_service = next(s for s in services if s.service_code == "ORGANIZATION_MANAGEMENT")
+            daily_report_service = next(s for s in services if s.service_code == "DAILY_REPORT")
+
             for company in companies:
-                for service in services:
-                    subscription = CompanyServiceSubscription(
+                # 全企業: 組織管理サービス（基本サービス）
+                org_subscription = CompanyServiceSubscription(
+                    company_id=company.id,
+                    service_id=org_management_service.id,
+                    status="active",
+                    start_date=date.today(),
+                    monthly_price=org_management_service.base_price,
+                )
+                session.add(org_subscription)
+                await session.flush()
+                subscriptions.append(org_subscription)
+                print(f"+ 契約: {company.name} → {org_management_service.service_name} (月額: ¥{org_subscription.monthly_price:,.0f})")
+
+                # company_id=1 のみ: 日報管理サービス（オプション）
+                if company.id == 1:
+                    daily_report_subscription = CompanyServiceSubscription(
                         company_id=company.id,
-                        service_id=service.id,
+                        service_id=daily_report_service.id,
                         status="active",
                         start_date=date.today(),
-                        monthly_price=service.base_price,
+                        monthly_price=daily_report_service.base_price,
                     )
-                    session.add(subscription)
+                    session.add(daily_report_subscription)
                     await session.flush()
-                    subscriptions.append(subscription)
-                    print(f"+ 契約: {company.name} → {service.service_name} (月額: ¥{subscription.monthly_price:,.0f})")
+                    subscriptions.append(daily_report_subscription)
+                    print(f"+ 契約: {company.name} → {daily_report_service.service_name} (月額: ¥{daily_report_subscription.monthly_price:,.0f}) ★オプション")
+                else:
+                    print(f"  未契約: {company.name} → {daily_report_service.service_name} (日報機能は利用不可)")
 
             await session.commit()
             print(f"サービス契約完了: {len(subscriptions)} 件")
