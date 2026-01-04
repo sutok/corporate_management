@@ -46,6 +46,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 操作履歴記録ミドルウェア
+from app.middleware import AuditLoggerMiddleware
+app.add_middleware(AuditLoggerMiddleware)
+
 
 @app.get("/")
 async def root():
